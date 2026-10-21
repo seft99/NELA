@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = { title: "Preguntas frecuentes", description: "Preguntas frecuentes de NELA Joyería, contenido pendiente de validación." };
 
 const placeholders = [
-  { question: "¿Cómo consulto la disponibilidad de un producto?", answer: "Contenido editable de muestra: la consulta se realizará por WhatsApp cuando el número oficial esté configurado." },
+  { question: "¿Cómo consulto la disponibilidad de un producto?", answer: "Puedes consultar la disponibilidad y las opciones de cada referencia mediante el botón oficial de WhatsApp." },
   { question: "¿Qué medios de pago están disponibles?", answer: "Política pendiente de suministrar y validar por NELA Joyería antes de la publicación comercial." },
   { question: "¿Cómo funcionan los envíos?", answer: "Política de cobertura, tiempos y costos pendiente de suministrar por la marca." },
   { question: "¿Puedo solicitar cambios?", answer: "La política oficial de cambios aún no ha sido suministrada. No se muestran promesas ni condiciones ficticias." },

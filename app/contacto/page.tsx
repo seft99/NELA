@@ -1,37 +1,43 @@
 import type { Metadata } from "next";
-import { Camera, Mail, MessageCircle } from "lucide-react";
+import { Camera, MessageCircle } from "lucide-react";
 import { siteConfig } from "@/config/site";
 import { WhatsappButton } from "@/components/ui/whatsapp-button";
+import { WhatsappPrivacyNotice } from "@/components/privacy/whatsapp-privacy-notice";
 
 export const metadata: Metadata = { title: "Contacto", description: "Canales de atención de NELA Joyería." };
 
 export default function ContactPage() {
   return (
-    <section className="simple-page contact-page page-shell" id="contenido">
+    <section className="simple-page contact-page page-shell" id="contenido" aria-labelledby="contact-title">
       <p className="eyebrow">Atención personalizada</p>
-      <h1>Hablemos de ese detalle que estás buscando.</h1>
-      <p className="simple-lead">Cuando los canales oficiales estén configurados, podrás contactarnos directamente desde aquí.</p>
+      <h1 id="contact-title">Hablemos de ese detalle que estás buscando.</h1>
+      <p className="simple-lead">Escríbenos por nuestros canales oficiales para consultar accesorios de plata, disponibilidad y pedidos.</p>
       <div className="contact-options">
-        <article>
-          <MessageCircle size={23} />
-          <h2>WhatsApp</h2>
-          <p>Consultas sobre productos, disponibilidad y opciones.</p>
+        <article aria-labelledby="contact-whatsapp">
+          <span className="contact-card-icon"><MessageCircle size={23} aria-hidden="true" /></span>
+          <h2 id="contact-whatsapp">WhatsApp</h2>
+          <p>Consultas sobre accesorios, disponibilidad y opciones.</p>
+          <p className="contact-value">{siteConfig.contact.whatsappDisplay}</p>
           <WhatsappButton label="Iniciar conversación" className="text-link" />
         </article>
-        <article>
-          <Camera size={23} />
-          <h2>Instagram</h2>
+        <article aria-labelledby="contact-instagram">
+          <span className="contact-card-icon"><Camera size={23} aria-hidden="true" /></span>
+          <h2 id="contact-instagram">Instagram</h2>
           <p>Novedades e inspiración desde el perfil oficial.</p>
-          {siteConfig.contact.instagramUrl ? <a className="text-link" href={siteConfig.contact.instagramUrl} target="_blank" rel="noreferrer">Visitar Instagram</a> : <span className="config-note">Enlace pendiente</span>}
-        </article>
-        <article>
-          <Mail size={23} />
-          <h2>Correo</h2>
-          <p>Un canal tranquilo para solicitudes generales.</p>
-          {siteConfig.contact.email ? <a className="text-link" href={`mailto:${siteConfig.contact.email}`}>Enviar correo</a> : <span className="config-note">Correo pendiente</span>}
+          <p className="contact-value">{siteConfig.contact.instagramHandle}</p>
+          <a
+            className="text-link"
+            href={siteConfig.contact.instagramUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Visitar ${siteConfig.contact.instagramHandle} en Instagram (abre en una pestaña nueva)`}
+          >
+            Visitar Instagram
+          </a>
         </article>
       </div>
-      <p className="form-note">No incluimos un formulario porque aún no existe un servicio de entrega de mensajes configurado.</p>
+      <p className="form-note">Para pedidos, WhatsApp es el canal oficial de atención.</p>
+      <WhatsappPrivacyNotice />
     </section>
   );
 }

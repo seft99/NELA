@@ -1,7 +1,7 @@
 import type { Product } from "@/types/product";
 import { ProductCard } from "./product-card";
 
-export function ProductGrid({ products }: { products: Product[] }) {
+export function ProductGrid({ products, className = "" }: { products: Product[]; className?: string }) {
   if (!products.length) {
     return (
       <div className="empty-state">
@@ -12,7 +12,7 @@ export function ProductGrid({ products }: { products: Product[] }) {
     );
   }
   return (
-    <div className="product-grid">
+    <div className={`product-grid${className ? ` ${className}` : ""}`}>
       {products.map((product) => <ProductCard key={product.id} product={product} />)}
     </div>
   );

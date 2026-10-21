@@ -7,7 +7,7 @@ export const categories: Category[] = [
     eyebrow: "Rituales de cuidado",
     description: "Texturas suaves y detalles pensados para acompañar tus momentos de cuidado personal.",
     image: "/images/editorial/skincare-demo.png",
-    imageAlt: "Composición editorial de frascos neutros de skincare, imagen de demostración",
+    imageAlt: "Composición editorial de frascos neutros de skincare",
     tone: "skincare",
   },
   {
@@ -16,7 +16,7 @@ export const categories: Category[] = [
     eyebrow: "Brillo sereno",
     description: "Piezas delicadas y contemporáneas para dar un acento sutil a cada look.",
     image: "/images/editorial/plata-demo.png",
-    imageAlt: "Composición editorial de accesorio plateado, imagen de demostración",
+    imageAlt: "Composición editorial de un accesorio plateado",
     tone: "silver",
   },
   {
@@ -25,7 +25,7 @@ export const categories: Category[] = [
     eyebrow: "Calidez luminosa",
     description: "Manillas de líneas refinadas para combinar, regalar y llevar todos los días.",
     image: "/images/editorial/oro-demo.png",
-    imageAlt: "Composición editorial de manilla dorada, imagen de demostración",
+    imageAlt: "Composición editorial de una manilla dorada",
     tone: "gold",
   },
 ];
@@ -33,7 +33,7 @@ export const categories: Category[] = [
 const demoNote =
   "Descripción de demostración. Reemplaza este texto desde Sanity cuando esté disponible la información oficial del producto.";
 
-export const demoProducts: Product[] = [
+export const baseDemoProducts: Product[] = [
   {
     id: "demo-skin-01",
     name: "Ritual Suave",
@@ -42,8 +42,10 @@ export const demoProducts: Product[] = [
     shortDescription: "Producto de muestra para visualizar el catálogo.",
     description: demoNote,
     price: 78000,
-    images: [{ src: "/images/editorial/skincare-demo.png", alt: "Producto de skincare de demostración" }],
+    images: [{ src: "/images/editorial/skincare-demo.png", alt: "Producto de skincare sobre fondo neutro" }],
     featured: true,
+    stock: 12,
+    purchaseEnabled: true,
     available: true,
     visible: true,
     displayOrder: 1,
@@ -57,8 +59,10 @@ export const demoProducts: Product[] = [
     shortDescription: "Contenido visual de muestra, listo para reemplazar.",
     description: demoNote,
     price: 64000,
-    images: [{ src: "/images/editorial/skincare-demo.png", alt: "Frasco neutro de skincare de demostración" }],
+    images: [{ src: "/images/editorial/skincare-demo.png", alt: "Frasco neutro de skincare" }],
     featured: false,
+    stock: 8,
+    purchaseEnabled: true,
     available: true,
     visible: true,
     displayOrder: 2,
@@ -72,8 +76,10 @@ export const demoProducts: Product[] = [
     shortDescription: "Referencia ficticia para probar filtros y diseño.",
     description: demoNote,
     price: 92000,
-    images: [{ src: "/images/editorial/skincare-demo.png", alt: "Tarro neutro de crema de demostración" }],
+    images: [{ src: "/images/editorial/skincare-demo.png", alt: "Tarro neutro de crema" }],
     featured: false,
+    stock: 0,
+    purchaseEnabled: true,
     available: false,
     visible: true,
     displayOrder: 3,
@@ -84,11 +90,14 @@ export const demoProducts: Product[] = [
     name: "Collar Bruma",
     slug: "collar-bruma-demo",
     category: "accesorios-plata",
+    catalogAttributes: { jewelryType: "collar" },
     shortDescription: "Accesorio ficticio para previsualizar la colección.",
     description: demoNote,
     price: 118000,
-    images: [{ src: "/images/editorial/plata-demo.png", alt: "Collar plateado de demostración" }],
+    images: [{ src: "/images/editorial/plata-demo.png", alt: "Collar plateado sobre una composición neutra" }],
     featured: true,
+    stock: 7,
+    purchaseEnabled: true,
     available: true,
     visible: true,
     displayOrder: 1,
@@ -99,11 +108,14 @@ export const demoProducts: Product[] = [
     name: "Cadena Alba",
     slug: "cadena-alba-demo",
     category: "accesorios-plata",
+    catalogAttributes: { jewelryType: "cadena" },
     shortDescription: "Nombre y precio ilustrativos, no corresponden a inventario real.",
     description: demoNote,
     price: 96000,
-    images: [{ src: "/images/editorial/plata-demo.png", alt: "Cadena plateada de demostración" }],
+    images: [{ src: "/images/editorial/plata-demo.png", alt: "Cadena plateada sobre una composición neutra" }],
     featured: false,
+    stock: 9,
+    purchaseEnabled: true,
     available: true,
     visible: true,
     displayOrder: 2,
@@ -114,11 +126,14 @@ export const demoProducts: Product[] = [
     name: "Dije Rocío",
     slug: "dije-rocio-demo",
     category: "accesorios-plata",
+    catalogAttributes: { jewelryType: "dije" },
     shortDescription: "Contenido de muestra para el futuro catálogo NELA.",
     description: demoNote,
     price: 87000,
-    images: [{ src: "/images/editorial/plata-demo.png", alt: "Dije plateado de demostración" }],
+    images: [{ src: "/images/editorial/plata-demo.png", alt: "Dije plateado sobre una composición neutra" }],
     featured: false,
+    stock: 0,
+    purchaseEnabled: true,
     available: false,
     visible: true,
     displayOrder: 3,
@@ -132,8 +147,10 @@ export const demoProducts: Product[] = [
     shortDescription: "Manilla ficticia para visualizar la experiencia de compra.",
     description: demoNote,
     price: 145000,
-    images: [{ src: "/images/editorial/oro-demo.png", alt: "Manilla dorada de demostración" }],
+    images: [{ src: "/images/editorial/oro-demo.png", alt: "Manilla dorada sobre una composición neutra" }],
     featured: true,
+    stock: 6,
+    purchaseEnabled: true,
     available: true,
     visible: true,
     displayOrder: 1,
@@ -147,8 +164,10 @@ export const demoProducts: Product[] = [
     shortDescription: "Referencia de muestra sin especificación de material o pureza.",
     description: demoNote,
     price: 132000,
-    images: [{ src: "/images/editorial/oro-demo.png", alt: "Manilla cálida de demostración" }],
+    images: [{ src: "/images/editorial/oro-demo.png", alt: "Manilla cálida sobre una composición neutra" }],
     featured: true,
+    stock: 5,
+    purchaseEnabled: true,
     available: true,
     visible: true,
     displayOrder: 2,
@@ -162,11 +181,113 @@ export const demoProducts: Product[] = [
     shortDescription: "Producto ficticio para probar la presentación del catálogo.",
     description: demoNote,
     price: 126000,
-    images: [{ src: "/images/editorial/oro-demo.png", alt: "Manilla dorada de muestra" }],
+    images: [{ src: "/images/editorial/oro-demo.png", alt: "Manilla dorada sobre fondo neutro" }],
     featured: false,
+    stock: 10,
+    purchaseEnabled: true,
     available: true,
     visible: true,
     displayOrder: 3,
     isDemo: true,
   },
 ];
+
+type AdditionalDemoProduct = Pick<Product, "name" | "slug" | "price" | "available"> & {
+  catalogAttributes?: Product["catalogAttributes"];
+};
+
+const additionalDemoCatalog: Record<Category["slug"], AdditionalDemoProduct[]> = {
+  skincare: [
+    { name: "Bálsamo Rocío", slug: "balsamo-rocio-demo", price: 71000, available: true },
+    { name: "Sérum Calma", slug: "serum-calma-demo", price: 83000, available: true },
+    { name: "Bruma Botánica", slug: "bruma-botanica-demo", price: 59000, available: true },
+    { name: "Limpiador Seda", slug: "limpiador-seda-demo", price: 67000, available: true },
+    { name: "Tónico Alba", slug: "tonico-alba-demo", price: 62000, available: false },
+    { name: "Mascarilla Lino", slug: "mascarilla-lino-demo", price: 75000, available: true },
+    { name: "Aceite Sereno", slug: "aceite-sereno-demo", price: 88000, available: true },
+    { name: "Contorno Luz", slug: "contorno-luz-demo", price: 97000, available: true },
+    { name: "Gel Frescura", slug: "gel-frescura-demo", price: 54000, available: true },
+    { name: "Emulsión Pétalo", slug: "emulsion-petalo-demo", price: 81000, available: false },
+    { name: "Esencia Aura", slug: "esencia-aura-demo", price: 69000, available: true },
+    { name: "Crema Velo", slug: "crema-velo-demo", price: 94000, available: true },
+  ],
+  "accesorios-plata": [
+    { name: "Aretes Niebla", slug: "aretes-niebla-demo", price: 89000, available: true, catalogAttributes: { jewelryType: "arete" } },
+    { name: "Pulsera Celeste", slug: "pulsera-celeste-demo", price: 104000, available: true, catalogAttributes: { jewelryType: "pulsera" } },
+    { name: "Anillo Nácar", slug: "anillo-nacar-demo", price: 93000, available: true, catalogAttributes: { jewelryType: "anillo" } },
+    { name: "Tobillera Luna", slug: "tobillera-luna-demo", price: 99000, available: true, catalogAttributes: { jewelryType: "tobillera" } },
+    { name: "Ear Cuff Prisma", slug: "ear-cuff-prisma-demo", price: 76000, available: false, catalogAttributes: { jewelryType: "ear-cuff" } },
+    { name: "Collar Lirio", slug: "collar-lirio-demo", price: 124000, available: true, catalogAttributes: { jewelryType: "collar" } },
+    { name: "Cadena Horizonte", slug: "cadena-horizonte-demo", price: 111000, available: true, catalogAttributes: { jewelryType: "cadena" } },
+    { name: "Dije Estrella", slug: "dije-estrella-demo", price: 84000, available: true, catalogAttributes: { jewelryType: "dije" } },
+    { name: "Aretes Gota", slug: "aretes-gota-demo", price: 91000, available: true, catalogAttributes: { jewelryType: "arete" } },
+    { name: "Pulsera Trama", slug: "pulsera-trama-demo", price: 107000, available: false, catalogAttributes: { jewelryType: "pulsera" } },
+    { name: "Anillo Cuarzo", slug: "anillo-cuarzo-demo", price: 98000, available: true, catalogAttributes: { jewelryType: "anillo" } },
+    { name: "Collar Marea", slug: "collar-marea-demo", price: 129000, available: true, catalogAttributes: { jewelryType: "collar" } },
+  ],
+  "manillas-oro": [
+    { name: "Manilla Solana", slug: "manilla-solana-demo", price: 151000, available: true },
+    { name: "Manilla Ámbar", slug: "manilla-ambar-demo", price: 138000, available: true },
+    { name: "Manilla Duna", slug: "manilla-duna-demo", price: 143000, available: true },
+    { name: "Manilla Violeta", slug: "manilla-violeta-demo", price: 156000, available: true },
+    { name: "Manilla Marfil", slug: "manilla-marfil-demo", price: 149000, available: false },
+    { name: "Manilla Nácar", slug: "manilla-nacar-demo", price: 162000, available: true },
+    { name: "Manilla Candela", slug: "manilla-candela-demo", price: 147000, available: true },
+    { name: "Manilla Oliva", slug: "manilla-oliva-demo", price: 136000, available: true },
+    { name: "Manilla Clara", slug: "manilla-clara-demo", price: 141000, available: true },
+    { name: "Manilla Abril", slug: "manilla-abril-demo", price: 154000, available: false },
+    { name: "Manilla Alma", slug: "manilla-alma-demo", price: 159000, available: true },
+    { name: "Manilla Vera", slug: "manilla-vera-demo", price: 134000, available: true },
+  ],
+};
+
+const categoryDemoDetails: Record<Category["slug"], { idPrefix: string; image: string; alt: string; noun: string }> = {
+  skincare: {
+    idPrefix: "demo-skin",
+    image: "/images/editorial/skincare-demo.png",
+    alt: "Producto de skincare sobre fondo neutro",
+    noun: "Producto de skincare",
+  },
+  "accesorios-plata": {
+    idPrefix: "demo-silver",
+    image: "/images/editorial/plata-demo.png",
+    alt: "Accesorio plateado sobre una composición neutra",
+    noun: "Accesorio de plata",
+  },
+  "manillas-oro": {
+    idPrefix: "demo-gold",
+    image: "/images/editorial/oro-demo.png",
+    alt: "Manilla dorada sobre una composición neutra",
+    noun: "Manilla dorada",
+  },
+};
+
+const additionalDemoProducts = (Object.entries(additionalDemoCatalog) as [Category["slug"], AdditionalDemoProduct[]][])
+  .flatMap(([category, products]) => {
+    const details = categoryDemoDetails[category];
+    return products.map<Product>((product, index) => ({
+      id: `${details.idPrefix}-${String(index + 4).padStart(2, "0")}`,
+      name: product.name,
+      slug: product.slug,
+      category,
+      shortDescription: `${details.noun} ficticio para probar la experiencia del catálogo.`,
+      description: demoNote,
+      price: product.price,
+      catalogAttributes: product.catalogAttributes,
+      images: [{ src: details.image, alt: details.alt }],
+      featured: false,
+      stock: product.available ? 8 : 0,
+      purchaseEnabled: true,
+      available: product.available,
+      visible: true,
+      displayOrder: index + 4,
+      isDemo: true,
+    }));
+  });
+
+export const expandedDemoProducts: Product[] = [...baseDemoProducts, ...additionalDemoProducts];
+
+const expandedDemoCatalogEnabled =
+  process.env.NEXT_PUBLIC_ENABLE_DEMO_CATALOG === "true" || process.env.NODE_ENV === "development";
+
+export const demoProducts: Product[] = expandedDemoCatalogEnabled ? expandedDemoProducts : baseDemoProducts;

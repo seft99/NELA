@@ -2,9 +2,14 @@ export function normalizeWhatsappNumber(value: string) {
   return value.replace(/\D/g, "");
 }
 
+export function isValidWhatsappNumber(value: string) {
+  const normalized = normalizeWhatsappNumber(value);
+  return /^\d{8,15}$/.test(normalized);
+}
+
 export function createWhatsappUrl(number: string, productName?: string, productUrl?: string) {
   const normalized = normalizeWhatsappNumber(number);
-  if (!normalized) return null;
+  if (!isValidWhatsappNumber(normalized)) return null;
 
   const message = productName
     ? `Hola, estoy interesada en el producto ${productName} de NELA Joyería. ¿Me puedes dar más información?${productUrl ? ` ${productUrl}` : ""}`

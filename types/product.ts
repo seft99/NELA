@@ -5,7 +5,59 @@ export type ProductImage = {
   alt: string;
 };
 
-export type Product = {
+export type ProductVariantOption = {
+  id: string;
+  label: string;
+};
+
+export type ProductVariantInventory = {
+  id: string;
+  label: string;
+  optionIds: string[];
+  stock: number;
+};
+
+export type ProductVariant = {
+  id: string;
+  name: string;
+  required?: boolean;
+  options: ProductVariantOption[];
+};
+
+export type ProductCustomerDetails = {
+  presentation?: string;
+  quantityOrVolume?: string;
+  material?: string;
+  finish?: string;
+  measurements?: string;
+};
+
+export type JewelryAudience = "mujer" | "hombre" | "unisex";
+
+export type JewelryType =
+  | "anillo"
+  | "dije"
+  | "argolla"
+  | "pulso"
+  | "topo"
+  | "cadena"
+  | "arete"
+  | "collar"
+  | "pulsera"
+  | "tobillera"
+  | "ear-cuff";
+
+export type JewelryCatalogAttributes = {
+  audience?: JewelryAudience;
+  jewelryType?: JewelryType;
+  ringSizes?: string[];
+  lengths?: string[];
+  weaveType?: string;
+  motif?: string;
+  stone?: string;
+};
+
+export type Product = ProductCustomerDetails & {
   id: string;
   name: string;
   slug: string;
@@ -14,7 +66,16 @@ export type Product = {
   description: string;
   price: number;
   images: ProductImage[];
+  reference?: string;
+  variants?: ProductVariant[];
+  /** Clasificación comercial verificada para filtros; nunca se deriva de imágenes o nombres. */
+  catalogAttributes?: JewelryCatalogAttributes;
+  variantInventory?: ProductVariantInventory[];
   featured: boolean;
+  /** Solo está presente en procesos internos del servidor y en el panel administrativo. */
+  stock?: number;
+  purchaseEnabled: boolean;
+  /** Estado público derivado de stock, purchaseEnabled y visible. */
   available: boolean;
   visible: boolean;
   displayOrder: number;

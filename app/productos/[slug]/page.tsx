@@ -4,10 +4,16 @@ import { ArrowLeft, Check, Clock3 } from "lucide-react";
 import { notFound } from "next/navigation";
 import { ProductGallery } from "@/components/products/product-gallery";
 import { ProductGrid } from "@/components/products/product-grid";
-import { WhatsappButton } from "@/components/ui/whatsapp-button";
+import { ProductInformation } from "@/components/products/product-information";
+import { ProductPurchasePanel } from "@/components/cart/product-purchase-panel";
 import { categories, demoProducts } from "@/data/demo-products";
 import { formatCOP, siteConfig } from "@/config/site";
 import { getProductBySlug, getProductsByCategory } from "@/lib/products";
+import {
+  getAbsoluteProductUrl,
+  getAbsolutePublicAssetUrl,
+} from "@/lib/products/product-url";
+import { getProductAvailability } from "@/lib/products/inventory";
 
 type ProductPageProps = { params: Promise<{ slug: string }> };
 
@@ -18,7 +24,22 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const product = await getProductBySlug((await params).slug);
   if (!product) return { title: "Producto no encontrado" };
-  return { title: product.name, description: product.shortDescription };
+  const productUrl = getAbsoluteProductUrl(siteConfig.url, product.slug);
+  const image = product.images[0];
+  const imageUrl = image ? getAbsolutePublicAssetUrl(siteConfig.url, image.src) : null;
+  return {
+    title: product.name,
+    description: product.shortDescription,
+    robots: product.isDemo ? { index: false, follow: true } : undefined,
+    alternates: productUrl ? { canonical: productUrl } : undefined,
+    openGraph: {
+      title: product.name,
+      description: product.shortDescription,
+      type: "website",
+      url: productUrl ?? undefined,
+      images: imageUrl ? [{ url: imageUrl, alt: image.alt }] : undefined,
+    },
+  };
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
@@ -28,9 +49,37 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const related = (await getProductsByCategory(product.category))
     .filter((item) => item.slug !== product.slug)
     .slice(0, 3);
+  const availability = getProductAvailability(product);
+  const productUrl = getAbsoluteProductUrl(siteConfig.url, product.slug);
+  const imageUrls = product.images.flatMap((image) => {
+    const url = getAbsolutePublicAssetUrl(siteConfig.url, image.src);
+    return url ? [url] : [];
+  });
+  const productJsonLd = !product.isDemo && productUrl
+    ? JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "Product",
+        name: product.name,
+        description: product.shortDescription,
+        image: imageUrls,
+        sku: product.reference || undefined,
+        category: category.name,
+        brand: { "@type": "Brand", name: siteConfig.name },
+        offers: {
+          "@type": "Offer",
+          url: productUrl,
+          priceCurrency: "COP",
+          price: product.price,
+          availability: availability.available
+            ? "https://schema.org/InStock"
+            : "https://schema.org/OutOfStock",
+        },
+      }).replace(/</g, "\\u003c")
+    : null;
 
   return (
     <div id="contenido">
+      {productJsonLd ? <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: productJsonLd }} /> : null}
       <div className="page-shell product-breadcrumb">
         <Link href={`/${category.slug}`}><ArrowLeft size={16} /> Volver a {category.name}</Link>
       </div>
@@ -38,26 +87,21 @@ export default async function ProductPage({ params }: ProductPageProps) {
         <ProductGallery images={product.images} productName={product.name} />
         <div className="product-detail-copy">
           <p className="eyebrow">{category.name}</p>
-          {product.isDemo ? <span className="demo-inline">Contenido de demostración</span> : null}
           <h1>{product.name}</h1>
           <p className="product-price">{formatCOP(product.price)}</p>
+          {product.reference ? <p className="product-reference">Ref. {product.reference}</p> : null}
           <div className="product-status">
-            {product.available ? <><Check size={17} /> Disponible para consulta</> : <><Clock3 size={17} /> No disponible por ahora</>}
+            {availability.available
+              ? <><Check size={17} /> {availability.label}</>
+              : <><Clock3 size={17} /> {availability.label}</>}
           </div>
           <p className="product-short">{product.shortDescription}</p>
           <div className="product-description">
             <h2>Sobre esta referencia</h2>
             <p>{product.description}</p>
           </div>
-          {product.available ? (
-            <WhatsappButton
-              productName={product.name}
-              productUrl={`${siteConfig.url}/productos/${product.slug}`}
-            />
-          ) : (
-            <span className="button button-disabled">Consulta no disponible</span>
-          )}
-          <p className="product-config-note">El botón se activa al configurar el número oficial de WhatsApp.</p>
+          <ProductInformation product={product} />
+          <ProductPurchasePanel product={product} />
         </div>
       </section>
       <section className="section page-shell related-section">

@@ -18,7 +18,17 @@ const SIGN_IN_PATH = "/signin-with-chatgpt";
 const SIGN_OUT_PATH = "/signout-with-chatgpt";
 const CALLBACK_PATH = "/callback";
 
+/**
+ * ChatGPT Sites injects and protects these identity headers. On Vercel the
+ * same header names would be supplied by the visitor, so they must never be
+ * trusted there without a dedicated authentication integration.
+ */
+export function chatGPTAuthAvailable(): boolean {
+  return process.env.VERCEL !== "1";
+}
+
 export async function getChatGPTUser(): Promise<ChatGPTUser | null> {
+  if (!chatGPTAuthAvailable()) return null;
   const requestHeaders = await headers();
   const userId = requestHeaders.get(USER_ID_HEADER);
   const email = requestHeaders.get(USER_EMAIL_HEADER);

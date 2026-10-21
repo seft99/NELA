@@ -13,13 +13,12 @@ export default function AboutPage() {
           <h1>Detalles para acompañar tu propia manera de brillar.</h1>
         </div>
         <p>
-          NELA Joyería reúne accesorios y productos de belleza en una experiencia cálida, femenina y cercana. Este texto es una introducción editorial y no pretende reemplazar la historia oficial de la marca.
+          NELA Joyería reúne accesorios de plata en una experiencia cálida, femenina y cercana. Este texto es una introducción editorial y no pretende reemplazar la historia oficial de la marca.
         </p>
       </section>
       <section className="about-grid page-shell">
         <div className="about-image">
-          <Image src="/images/editorial/hero-nela-demo.png" alt="Composición editorial neutra de NELA, imagen de demostración" fill sizes="(max-width: 850px) 100vw, 55vw" />
-          <span className="demo-image-note">Imagen editorial de demostración</span>
+          <Image src="/images/editorial/hero-nela-demo.png" alt="Composición editorial neutra con una cadena plateada de NELA" fill sizes="(max-width: 850px) 100vw, 55vw" />
         </div>
         <div className="about-copy">
           <span className="large-index">01</span>

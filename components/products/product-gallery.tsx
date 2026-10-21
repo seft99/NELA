@@ -4,7 +4,13 @@ import Image from "next/image";
 import { useState } from "react";
 import type { ProductImage } from "@/types/product";
 
-export function ProductGallery({ images, productName }: { images: ProductImage[]; productName: string }) {
+export function ProductGallery({
+  images,
+  productName,
+}: {
+  images: ProductImage[];
+  productName: string;
+}) {
   const safeImages = images.length
     ? images
     : [{ src: "/images/editorial/hero-nela-demo.png", alt: `Marcador visual para ${productName}` }];
@@ -15,7 +21,6 @@ export function ProductGallery({ images, productName }: { images: ProductImage[]
     <div className="product-gallery">
       <div className="product-main-image">
         <Image src={active.src} alt={active.alt} fill priority sizes="(max-width: 900px) 100vw, 55vw" />
-        <span className="demo-image-note">Imagen editorial de demostración</span>
       </div>
       {safeImages.length > 1 ? (
         <div className="product-thumbnails" aria-label="Seleccionar imagen">

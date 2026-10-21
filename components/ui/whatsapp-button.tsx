@@ -25,8 +25,14 @@ export function WhatsappButton({
     );
   }
   return (
-    <a className={className} href={href} target="_blank" rel="noreferrer">
-      <MessageCircle size={17} />
+    <a
+      className={className}
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={`${label} (abre en una pestaña nueva)`}
+    >
+      <MessageCircle size={17} aria-hidden="true" />
       {label}
     </a>
   );

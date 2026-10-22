@@ -77,7 +77,7 @@ export function CartDrawer() {
           <div className="cart-empty">
             <span><ShoppingBag size={30} strokeWidth={1.3} aria-hidden="true" /></span>
             <h2>Tu carrito está vacío.</h2>
-            <p>Descubre nuestro catálogo de plata y encuentra tus próximos favoritos.</p>
+            <p>Descubre nuestro catálogo de plata ley 925 y encuentra tus próximos favoritos.</p>
             <Link href="/accesorios-plata#catalogo" className="button button-outline" onClick={closeCart}>Explorar productos</Link>
           </div>
         ) : (

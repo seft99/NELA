@@ -10,7 +10,7 @@ export const silverNavigationLinks = [
 
 export const mainNavigation = [
   { href: "/", label: "Inicio" },
-  { href: "/accesorios-plata", label: "Catálogo de Plata" },
+  { href: "/accesorios-plata", label: "Catálogo Plata Ley 925" },
   { href: "/nosotros", label: "Nosotros" },
   { href: "/contacto", label: "Contacto" },
 ] as const;

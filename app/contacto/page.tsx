@@ -11,7 +11,7 @@ export default function ContactPage() {
     <section className="simple-page contact-page page-shell" id="contenido" aria-labelledby="contact-title">
       <p className="eyebrow">Atención personalizada</p>
       <h1 id="contact-title">Hablemos de ese detalle que estás buscando.</h1>
-      <p className="simple-lead">Escríbenos por nuestros canales oficiales para consultar accesorios de plata, disponibilidad y pedidos.</p>
+      <p className="simple-lead">Escríbenos por nuestros canales oficiales para consultar accesorios de plata ley 925, disponibilidad y pedidos.</p>
       <div className="contact-options">
         <article aria-labelledby="contact-whatsapp">
           <span className="contact-card-icon"><MessageCircle size={23} aria-hidden="true" /></span>

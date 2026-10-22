@@ -1,6 +1,7 @@
-import Image from "next/image";
 import Link from "next/link";
 import type { Category, Product } from "@/types/product";
+import type { StoreCarouselSlide } from "@/components/home/store-image-carousel";
+import { StoreImageCarousel } from "@/components/home/store-image-carousel";
 import { WhatsappButton } from "@/components/ui/whatsapp-button";
 import { ProductExplorer } from "@/components/products/product-explorer";
 
@@ -9,11 +10,13 @@ export function CategoryPage({
   products,
   catalogTitle = "Encuentra tu próximo detalle",
   catalogDescription = "Busca, filtra y ordena la colección para encontrar tu próximo detalle.",
+  heroImages,
 }: {
   category: Category;
   products: Product[];
   catalogTitle?: string;
   catalogDescription?: string;
+  heroImages?: readonly StoreCarouselSlide[];
 }) {
   return (
     <>
@@ -26,7 +29,11 @@ export function CategoryPage({
             <Link href="#catalogo" className="text-link">Descubrir la colección</Link>
           </div>
           <div className="category-hero-image image-reveal">
-            <Image src={category.image} alt={category.imageAlt} fill priority sizes="(max-width: 900px) 100vw, 50vw" />
+            <StoreImageCarousel
+              slides={heroImages ?? [{ src: category.image, alt: category.imageAlt }]}
+              ariaLabel={`Galería de ${category.name}`}
+              priority
+            />
           </div>
         </div>
       </section>

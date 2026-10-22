@@ -23,6 +23,8 @@ try {
 
   assert.equal(site.siteConfig.contact.whatsappNumber, "573156951945");
   assert.equal(site.siteConfig.contact.instagramUrl, "https://www.instagram.com/nela_joyeria/");
+  assert.equal(site.siteConfig.url, "https://nelajoyeria.vercel.app");
+  assert.doesNotMatch(site.siteConfig.url, /chatgpt\.site/);
   assert.equal(
     whatsappLinks.createWhatsappUrl(site.siteConfig.contact.whatsappNumber)?.startsWith(
       "https://wa.me/573156951945?text=",
@@ -134,6 +136,15 @@ try {
   assert.match(directCheckout.message, /https:\/\/nela\.com\.co\/productos\/producto-de-prueba/);
   assert.match(directCheckout.url, /^https:\/\/wa\.me\/573001234567\?text=/);
   assert.equal(directCheckout.inventoryValid, true);
+  const productionCheckout = whatsapp.createDirectPurchaseCheckout(
+    site.siteConfig.contact.whatsappNumber,
+    product,
+    1,
+    selection,
+    site.siteConfig.url,
+  );
+  assert.match(productionCheckout.message, /https:\/\/nelajoyeria\.vercel\.app\/productos\/producto-de-prueba/);
+  assert.doesNotMatch(productionCheckout.message, /chatgpt\.site/);
   assert.equal(
     whatsapp.createDirectPurchaseCheckout("573001234567", { ...product, stock: 0, available: false }, 1).url,
     null,
@@ -151,12 +162,12 @@ try {
     variants: [],
   };
   const silverMessage = whatsapp.createDirectPurchaseMessage(silverProduct, 1, [], publicSiteUrl);
-  assert.match(silverMessage, /Características: Material: Plata 925, Color o acabado: Pulido, Medidas: 45 cm/);
+  assert.match(silverMessage, /Características: Material: Plata ley 925, Color o acabado: Pulido, Medidas: 45 cm/);
   assert.doesNotMatch(silverMessage, /Dato que no corresponde/);
   const persistedSilver = storage.parsePersistedCart(
     storage.serializeCart([cart.createCartItem(silverProduct, 1)]),
   )[0];
-  assert.equal(persistedSilver.material, "Plata 925");
+  assert.equal(persistedSilver.material, "Plata ley 925");
   assert.equal(persistedSilver.quantityOrVolume, undefined);
 
   const productWithoutReference = { ...product, reference: undefined, name: "Aretes Sol & Luna" };

@@ -13,6 +13,10 @@ function cleanValue(value: string | undefined) {
   return cleaned || null;
 }
 
+function normalizeMaterial(value: string) {
+  return /^plata(?:\s+ley)?\s+925$/i.test(value) ? "Plata ley 925" : value;
+}
+
 export function getPublicProductDetails(product: PublicProductDetailsSource): PublicProductDetail[] {
   const candidates = product.category === "skincare"
     ? [
@@ -31,7 +35,8 @@ export function getPublicProductDetails(product: PublicProductDetailsSource): Pu
 
   return candidates.flatMap((detail) => {
     const value = cleanValue(detail.value);
-    return value ? [{ ...detail, value }] : [];
+    if (!value) return [];
+    return [{ ...detail, value: detail.key === "material" ? normalizeMaterial(value) : value }];
   });
 }
 

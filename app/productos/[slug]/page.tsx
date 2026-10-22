@@ -6,7 +6,7 @@ import { ProductGallery } from "@/components/products/product-gallery";
 import { ProductGrid } from "@/components/products/product-grid";
 import { ProductInformation } from "@/components/products/product-information";
 import { ProductPurchasePanel } from "@/components/cart/product-purchase-panel";
-import { categories, demoProducts } from "@/data/demo-products";
+import { categories } from "@/config/categories";
 import { formatCOP, siteConfig } from "@/config/site";
 import { getProductBySlug, getProductsByCategory } from "@/lib/products";
 import {
@@ -14,12 +14,9 @@ import {
   getAbsolutePublicAssetUrl,
 } from "@/lib/products/product-url";
 import { getProductAvailability } from "@/lib/products/inventory";
+import { belongsToSilverCollection, getSilverCollectionForJewelryType } from "@/config/silver-collections";
 
 type ProductPageProps = { params: Promise<{ slug: string }> };
-
-export function generateStaticParams() {
-  return demoProducts.map((product) => ({ slug: product.slug }));
-}
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const product = await getProductBySlug((await params).slug);
@@ -46,8 +43,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const product = await getProductBySlug((await params).slug);
   if (!product) notFound();
   const category = categories.find((item) => item.slug === product.category)!;
+  const silverCollection = product.category === "accesorios-plata"
+    ? getSilverCollectionForJewelryType(product.catalogAttributes?.jewelryType)
+    : undefined;
   const related = (await getProductsByCategory(product.category))
     .filter((item) => item.slug !== product.slug)
+    .filter((item) => !silverCollection || belongsToSilverCollection(item, silverCollection))
     .slice(0, 3);
   const availability = getProductAvailability(product);
   const productUrl = getAbsoluteProductUrl(siteConfig.url, product.slug);
@@ -81,7 +82,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
     <div id="contenido">
       {productJsonLd ? <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: productJsonLd }} /> : null}
       <div className="page-shell product-breadcrumb">
-        <Link href={`/${category.slug}`}><ArrowLeft size={16} /> Volver a {category.name}</Link>
+        <Link href={silverCollection ? `/accesorios-plata/${silverCollection.slug}` : `/${category.slug}`}>
+          <ArrowLeft size={16} /> Volver a {silverCollection?.label ?? category.name}
+        </Link>
       </div>
       <section className="page-shell product-detail-grid">
         <ProductGallery images={product.images} productName={product.name} />

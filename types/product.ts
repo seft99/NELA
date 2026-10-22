@@ -55,6 +55,7 @@ export type JewelryCatalogAttributes = {
   weaveType?: string;
   motif?: string;
   stone?: string;
+  hasStone?: boolean;
 };
 
 export type Product = ProductCustomerDetails & {
@@ -65,6 +66,7 @@ export type Product = ProductCustomerDetails & {
   shortDescription: string;
   description: string;
   price: number;
+  currency?: "COP";
   images: ProductImage[];
   reference?: string;
   variants?: ProductVariant[];

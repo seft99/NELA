@@ -12,6 +12,7 @@ export function ProductInformation({ product }: { product: Product }) {
     attributes?.weaveType?.trim() ? { key: "weaveType", label: "Tipo de tejido", value: attributes.weaveType.trim() } : null,
     attributes?.motif?.trim() ? { key: "motif", label: "Motivo o diseño", value: attributes.motif.trim() } : null,
     attributes?.stone?.trim() ? { key: "stone", label: "Piedra", value: attributes.stone.trim() } : null,
+    typeof attributes?.hasStone === "boolean" ? { key: "hasStone", label: "Detalle con piedra", value: attributes.hasStone ? "Sí" : "No" } : null,
   ].filter((detail): detail is { key: string; label: string; value: string } => detail !== null);
   const details = [...getPublicProductDetails(product), ...catalogDetails];
   if (!details.length) return null;

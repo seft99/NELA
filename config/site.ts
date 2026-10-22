@@ -1,11 +1,27 @@
+export const OFFICIAL_SITE_URL = "https://nelajoyeria.vercel.app";
+
+function resolveSiteUrl(value?: string) {
+  if (!value) return OFFICIAL_SITE_URL;
+  try {
+    const url = new URL(value);
+    if (
+      (url.protocol !== "https:" && url.protocol !== "http:")
+      || url.hostname.toLocaleLowerCase("en").endsWith(".chatgpt.site")
+    ) return OFFICIAL_SITE_URL;
+    return url.origin;
+  } catch {
+    return OFFICIAL_SITE_URL;
+  }
+}
+
 export const siteConfig = {
   name: "NELA Joyería",
   shortName: "NELA",
   description:
-    "Una selección delicada de accesorios de plata para acompañar tu estilo.",
+    "Una selección delicada de accesorios de plata ley 925 para acompañar tu estilo.",
   locale: "es_CO",
   currency: "COP",
-  url: process.env.NEXT_PUBLIC_SITE_URL || "https://nela-joyeria-boutique.lucky-bass-2428.chatgpt.site",
+  url: resolveSiteUrl(process.env.NEXT_PUBLIC_SITE_URL),
   announcement: {
     enabled: true,
     text: "Catálogo boutique · Atención personalizada",

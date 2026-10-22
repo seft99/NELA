@@ -5,22 +5,24 @@ Sitio boutique en español para NELA Joyería. Está construido con Next.js (App
 ## Estado actual
 
 - Home editorial responsive.
-- Tienda pública enfocada exclusivamente en Accesorios de Plata.
+- Tienda pública enfocada exclusivamente en Accesorios de Plata Ley 925.
 - Búsqueda, filtro de disponibilidad y ordenamiento.
 - Fichas de producto con galería y relacionados.
 - Jerarquía pública para joyería: material, acabado y medidas únicamente cuando están verificados.
 - Carrito lateral con cantidades, variantes, persistencia local y resumen en COP.
 - Compra directa y checkout del carrito por WhatsApp, sin pagos ni confirmaciones automáticas.
-- Modo demo seguro cuando Sanity no está configurado.
+- Estado seguro de catálogo no disponible cuando Sanity falta o no responde; nunca usa demos como fallback.
 - Integración de catálogo Sanity mediante su API pública de lectura.
 - Panel privado y restringido para inventario, disponibilidad y visibilidad.
 - Studio de Sanity preparado como proyecto independiente en `studio/`.
 - WhatsApp e Instagram oficiales configurados como únicos canales públicos de contacto.
 - SEO base, sitemap, robots, metadatos Open Graph y página 404.
 
-Las imágenes editoriales y productos actuales están marcados como contenido de demostración. No representan inventario real, materiales ni características oficiales.
+El paquete de inventario real se valida localmente antes de cualquier escritura. Las composiciones editoriales del diseño son independientes del catálogo y no se utilizan como sustituto de productos reales.
 
 El modelo administrativo conserva los registros y categorías históricas para evitar pérdida de información y permitir migraciones controladas. La navegación, el catálogo y las fichas públicas solo exponen productos de `accesorios-plata`; las rutas antiguas de skincare y manillas de oro redirigen al catálogo vigente.
+
+La migración del inventario real se documenta en `docs/migracion-inventario-production.md`. El código público no usa fixtures demo como fallback; esos datos permanecen aislados para pruebas y para el migrador histórico de `development`.
 
 ## Desarrollo local
 
@@ -48,11 +50,11 @@ npm run build
 
 Variables importantes:
 
-- `NEXT_PUBLIC_SITE_URL`: dominio público final, usado en metadatos, sitemap y enlaces de producto.
+- `NEXT_PUBLIC_SITE_URL`: dominio público final (`https://nelajoyeria.vercel.app`), usado en metadatos, sitemap y enlaces de producto enviados por WhatsApp. Los dominios antiguos de ChatGPT Sites se rechazan para evitar redirecciones incorrectas.
 - `NEXT_PUBLIC_BUSINESS_EMAIL`: reserva técnica para una futura dirección verificada; no se muestra públicamente.
-- `NEXT_PUBLIC_ENABLE_DEMO_CATALOG`: activa explícitamente el catálogo demo ampliado fuera del desarrollo local.
 - `NEXT_PUBLIC_SANITY_PROJECT_ID`: ID del proyecto Sanity.
 - `NEXT_PUBLIC_SANITY_DATASET`: `development` para demos locales; `production` queda reservado para productos reales.
+- `SANITY_MIGRATION_DATASET`: destino explícito y exclusivo del migrador real; debe ser `production`.
 - `SANITY_API_VERSION`: versión estable para consultas.
 - `SANITY_API_WRITE_TOKEN`: secreto del servidor para guardar inventario en Sanity. No debe usar el prefijo `NEXT_PUBLIC_` ni incluirse en commits.
 - `INVENTORY_ADMIN_EMAILS`: correos de las cuentas ChatGPT autorizadas, separados por coma.
@@ -125,13 +127,14 @@ Las tarjetas muestran únicamente imagen, nombre, precio, estado agotado y accio
 
 Sanity separa “Información para clientes” de “Administración interna”. El inventario numérico, destacado, visibilidad y orden permanecen en el grupo interno y no se muestran en tarjetas ni fichas públicas. Materiales y acabados deben dejarse vacíos hasta contar con información verificada.
 
-## Catálogo demo y Sanity
+## Catálogo real y Sanity
 
 La abstracción de datos vive en `lib/products/index.ts`:
 
-- Sin las variables de Sanity, usa `data/demo-products.ts`. En desarrollo ofrece 15 referencias ficticias por categoría; una compilación de producción conserva el conjunto base salvo que se active explícitamente `NEXT_PUBLIC_ENABLE_DEMO_CATALOG=true`.
-- Con proyecto y dataset configurados, el servidor consulta públicamente solo documentos publicados con `visible == true`.
-- Si Sanity está configurado pero no responde, el sitio muestra un estado vacío; no mezcla silenciosamente productos demo con inventario real.
+- Sin una configuración completa de Sanity, el sitio muestra el catálogo temporalmente no disponible.
+- Con proyecto y dataset configurados, el servidor consulta únicamente productos publicados, visibles y con `isDemo != true`.
+- Si Sanity no responde, el sitio no mezcla silenciosamente fixtures con inventario real.
+- `data/demo-products.ts` permanece aislado para pruebas automatizadas y para el migrador histórico que solo puede escribir en `development`.
 
 La migración idempotente del catálogo demo, su `dry run` y la configuración de privacidad están documentadas en [`docs/migracion-sanity.md`](docs/migracion-sanity.md).
 
@@ -163,19 +166,15 @@ Para Vercel, `npm run build` selecciona automáticamente el compilador oficial d
 - Colores y tokens: `app/globals.css`, sección `:root`.
 - Datos generales y canales: `config/site.ts`.
 - Navegación: `config/navigation.ts`.
-- Datos demo: `data/demo-products.ts`.
+- Fixtures exclusivos de pruebas: `data/demo-products.ts`.
 - Logo oficial transparente: `public/images/branding/nela-logo-transparent.png`.
 - Imágenes editoriales: `public/images/editorial/`.
 
-Para reemplazar imágenes, conserva nombres estables o actualiza las rutas en `data/demo-products.ts`. Añade textos alternativos descriptivos para cada fotografía real.
+Las imágenes de producto reales se administran desde Sanity y conservan textos alternativos validados durante la migración.
 
 ## Antes del lanzamiento comercial
 
-Falta recibir y configurar:
-
-- Fotografías e información real de cada producto.
-- Precios confirmados e inventario real.
-- Dominio definitivo.
+Antes del lanzamiento debe autorizarse la migración real, ejecutar el verificador de `production`, configurar `NEXT_PUBLIC_SANITY_DATASET=production` en Vercel y completar una revisión funcional del catálogo publicado.
 - Proyecto/dataset de Sanity y productos publicados.
 - Historia oficial de la marca.
 - Políticas validadas de envíos, cambios, pagos y privacidad.

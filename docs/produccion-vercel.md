@@ -16,7 +16,7 @@ Antes de habilitar el panel en Vercel se debe elegir e integrar un proveedor de 
 Configura por ambiente en Vercel, sin guardar secretos en Git:
 
 ```dotenv
-NEXT_PUBLIC_SITE_URL=https://dominio-final.example
+NEXT_PUBLIC_SITE_URL=https://nelajoyeria.vercel.app
 NEXT_PUBLIC_SANITY_PROJECT_ID=0l7ykvj6
 NEXT_PUBLIC_SANITY_DATASET=production
 SANITY_API_VERSION=2025-02-19
@@ -50,7 +50,7 @@ npm run build:vercel
 npm audit --omit=dev
 ```
 
-Después del despliegue de prueba, verifica `/`, `/accesorios-plata`, una ficha válida de plata, una ficha inexistente, `/contacto`, carrito vacío y con varios productos, y que `/admin/inventario` informe que el panel no está habilitado. Comprueba también que `/skincare` y `/manillas-oro` redirijan al catálogo de plata. Revisa `robots.txt`, `sitemap.xml`, cabeceras de seguridad y enlaces de WhatsApp/Instagram.
+Después del despliegue de prueba, verifica `/`, `/accesorios-plata`, una ficha válida de plata ley 925, una ficha inexistente, `/contacto`, carrito vacío y con varios productos, y que `/admin/inventario` informe que el panel no está habilitado. Comprueba también que `/skincare` y `/manillas-oro` redirijan al catálogo de plata ley 925. Revisa `robots.txt`, `sitemap.xml`, cabeceras de seguridad y enlaces de WhatsApp/Instagram.
 
 ## Requisitos todavía externos
 

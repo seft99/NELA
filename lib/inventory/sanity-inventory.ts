@@ -40,7 +40,7 @@ async function sanityRequest(path: string, init: RequestInit = {}) {
   return response.json();
 }
 
-const inventoryQuery = `*[_type == "product" && !(_id in path("drafts.**"))] | order(displayOrder asc) {
+const inventoryQuery = `*[_type == "product" && category == "accesorios-plata" && (${dataset === "production" ? "isDemo != true" : "true"}) && !(_id in path("drafts.**"))] | order(displayOrder asc) {
   "id": _id,
   "revision": _rev,
   name,

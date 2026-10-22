@@ -344,8 +344,8 @@ export function ProductExplorer({
         <ScrollableProductGrid key={resetKey} products={visibleProducts} resetKey={resetKey} />
       ) : (
         <div className="empty-state compact">
-          <h2>{invalidPriceRange ? "Revisa el rango de precio." : "No encontramos coincidencias."}</h2>
-          <p>{invalidPriceRange ? "El valor mínimo debe ser menor o igual al máximo." : "Prueba otra búsqueda o cambia los filtros."}</p>
+          <h2>{products.length === 0 ? "Catálogo temporalmente no disponible." : invalidPriceRange ? "Revisa el rango de precio." : "No encontramos coincidencias."}</h2>
+          <p>{products.length === 0 ? "Estamos actualizando la colección. Intenta nuevamente más tarde o escríbenos por WhatsApp." : invalidPriceRange ? "El valor mínimo debe ser menor o igual al máximo." : "Prueba otra búsqueda o cambia los filtros."}</p>
           {activeChips.length ? <button className="text-link empty-reset" type="button" onClick={clearFilters}>Limpiar filtros</button> : null}
         </div>
       )}

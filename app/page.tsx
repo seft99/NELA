@@ -18,10 +18,10 @@ export default async function HomePage() {
         </div>
         <div className="page-shell home-hero-inner">
           <div className="hero-copy reveal">
-            <p className="eyebrow">Accesorios de plata · Detalles</p>
+            <p className="eyebrow">Accesorios de plata ley 925 · Detalles</p>
             <h1>La belleza está<br />en los detalles.</h1>
             <p className="hero-description">
-              Descubre accesorios de plata elegidos para acompañar tu estilo todos los días.
+              Descubre accesorios de plata ley 925 elegidos para acompañar tu estilo todos los días.
             </p>
             <div className="hero-actions">
               <Link href="/accesorios-plata#catalogo" className="button button-primary">Explorar catálogo <ArrowRight size={17} /></Link>
@@ -33,14 +33,14 @@ export default async function HomePage() {
             <p>Una boutique digital creada para descubrir con calma.</p>
           </div>
         </div>
-        <Link href="#universo-plata" className="scroll-cue" aria-label="Conocer el universo de plata NELA">
+        <Link href="#universo-plata" className="scroll-cue" aria-label="Conocer el universo de plata ley 925 NELA">
           <ArrowDown size={18} />
         </Link>
       </section>
 
       <section className="intro-strip page-shell" aria-label="Introducción">
         <span>01</span>
-        <p>Plata. Sutil. Atemporal.</p>
+        <p>Plata ley 925. Sutil. Atemporal.</p>
         <span className="intro-rule" />
         <Sparkles size={18} strokeWidth={1.3} />
       </section>
@@ -53,7 +53,7 @@ export default async function HomePage() {
           </div>
           <div className="silver-focus-copy">
             <p className="eyebrow">Una colección, muchas formas</p>
-            <h2>Plata para acompañar cada versión de ti.</h2>
+            <h2>Plata ley 925 para acompañar cada versión de ti.</h2>
             <p>
               Encuentra piezas delicadas y contemporáneas para combinar, regalar y convertir en parte de tu estilo.
             </p>
@@ -78,7 +78,7 @@ export default async function HomePage() {
               <p className="eyebrow">Selección de la boutique</p>
               <h2>Nuestros favoritos</h2>
             </div>
-            <p>Una selección de accesorios de plata para descubrir los detalles que definen el universo NELA.</p>
+            <p>Una selección de accesorios de plata ley 925 para descubrir los detalles que definen el universo NELA.</p>
           </div>
           <ProductGrid products={featuredProducts} />
           <div className="center-action">
@@ -93,7 +93,7 @@ export default async function HomePage() {
           <p className="eyebrow">La esencia NELA</p>
           <h2>Un universo de<br /><em>detalles especiales</em></h2>
           <p>
-            NELA reúne accesorios de plata en una experiencia cálida, delicada y cercana. La historia oficial de la marca se incorporará aquí cuando esté disponible.
+            NELA reúne accesorios de plata ley 925 en una experiencia cálida, delicada y cercana. La historia oficial de la marca se incorporará aquí cuando esté disponible.
           </p>
           <Link href="/nosotros" className="text-link">Descubrir nuestra esencia</Link>
         </div>

@@ -12,11 +12,11 @@ export function Footer() {
       <div className="footer-grid page-shell">
         <div className="footer-brand">
           <Image src="/images/branding/nela-logo-transparent.png" alt="NELA Joyería" width={112} height={112} />
-          <p>Accesorios de plata elegidos con intención para acompañar tu estilo.</p>
+          <p>Accesorios de plata ley 925 elegidos con intención para acompañar tu estilo.</p>
         </div>
         <div>
           <p className="footer-title">Explorar</p>
-          <Link href="/accesorios-plata">Catálogo de Plata</Link>
+          <Link href="/accesorios-plata">Catálogo Plata Ley 925</Link>
           <Link href="/#favoritos">Nuestros favoritos</Link>
           <Link href="/contacto">Asesoría personalizada</Link>
         </div>

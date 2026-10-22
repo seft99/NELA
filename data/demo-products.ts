@@ -1,34 +1,7 @@
 import type { Category, Product } from "@/types/product";
+import { categories } from "@/config/categories";
 
-export const categories: Category[] = [
-  {
-    slug: "skincare",
-    name: "Skincare",
-    eyebrow: "Rituales de cuidado",
-    description: "Texturas suaves y detalles pensados para acompañar tus momentos de cuidado personal.",
-    image: "/images/editorial/skincare-demo.png",
-    imageAlt: "Composición editorial de frascos neutros de skincare",
-    tone: "skincare",
-  },
-  {
-    slug: "accesorios-plata",
-    name: "Accesorios de Plata",
-    eyebrow: "Brillo sereno",
-    description: "Piezas delicadas y contemporáneas para dar un acento sutil a cada look.",
-    image: "/images/editorial/plata-demo.png",
-    imageAlt: "Composición editorial de un accesorio plateado",
-    tone: "silver",
-  },
-  {
-    slug: "manillas-oro",
-    name: "Manillas de Oro",
-    eyebrow: "Calidez luminosa",
-    description: "Manillas de líneas refinadas para combinar, regalar y llevar todos los días.",
-    image: "/images/editorial/oro-demo.png",
-    imageAlt: "Composición editorial de una manilla dorada",
-    tone: "gold",
-  },
-];
+export { categories };
 
 const demoNote =
   "Descripción de demostración. Reemplaza este texto desde Sanity cuando esté disponible la información oficial del producto.";
@@ -94,7 +67,7 @@ export const baseDemoProducts: Product[] = [
     shortDescription: "Accesorio ficticio para previsualizar la colección.",
     description: demoNote,
     price: 118000,
-    images: [{ src: "/images/editorial/plata-demo.png", alt: "Collar plateado sobre una composición neutra" }],
+    images: [{ src: "/images/editorial/plata-demo.png", alt: "Collar de plata ley 925 sobre una composición neutra" }],
     featured: true,
     stock: 7,
     purchaseEnabled: true,
@@ -112,7 +85,7 @@ export const baseDemoProducts: Product[] = [
     shortDescription: "Nombre y precio ilustrativos, no corresponden a inventario real.",
     description: demoNote,
     price: 96000,
-    images: [{ src: "/images/editorial/plata-demo.png", alt: "Cadena plateada sobre una composición neutra" }],
+    images: [{ src: "/images/editorial/plata-demo.png", alt: "Cadena de plata ley 925 sobre una composición neutra" }],
     featured: false,
     stock: 9,
     purchaseEnabled: true,
@@ -130,7 +103,7 @@ export const baseDemoProducts: Product[] = [
     shortDescription: "Contenido de muestra para el futuro catálogo NELA.",
     description: demoNote,
     price: 87000,
-    images: [{ src: "/images/editorial/plata-demo.png", alt: "Dije plateado sobre una composición neutra" }],
+    images: [{ src: "/images/editorial/plata-demo.png", alt: "Dije de plata ley 925 sobre una composición neutra" }],
     featured: false,
     stock: 0,
     purchaseEnabled: true,
@@ -251,8 +224,8 @@ const categoryDemoDetails: Record<Category["slug"], { idPrefix: string; image: s
   "accesorios-plata": {
     idPrefix: "demo-silver",
     image: "/images/editorial/plata-demo.png",
-    alt: "Accesorio plateado sobre una composición neutra",
-    noun: "Accesorio de plata",
+    alt: "Accesorio de plata ley 925 sobre una composición neutra",
+    noun: "Accesorio de plata ley 925",
   },
   "manillas-oro": {
     idPrefix: "demo-gold",

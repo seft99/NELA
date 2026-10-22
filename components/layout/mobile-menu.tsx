@@ -103,7 +103,7 @@ export function MobileMenu() {
           >
             <div className="mobile-nav-heading">
               <span className="mobile-nav-eyebrow">Explora NELA</span>
-              <p id="mobile-navigation-title">Plata para cada momento.</p>
+              <p id="mobile-navigation-title">Plata ley 925 para cada momento.</p>
             </div>
 
             <nav aria-label="Navegación móvil">

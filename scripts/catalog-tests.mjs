@@ -17,6 +17,8 @@ try {
   const productRepository = await server.ssrLoadModule("/lib/products/index.ts");
   const publicDetails = await server.ssrLoadModule("/lib/products/public-details.ts");
   const catalogFilters = await server.ssrLoadModule("/lib/products/catalog-filters.ts");
+  const silverCollectionConfig = await server.ssrLoadModule("/config/silver-collections.ts");
+  const carousel = await server.ssrLoadModule("/lib/products/carousel.ts");
   const categories = ["skincare", "accesorios-plata", "manillas-oro"];
 
   assert.equal(catalog.baseDemoProducts.length, 9);
@@ -43,13 +45,11 @@ try {
   assert.equal(catalog.expandedDemoProducts.every((product) => product.visible), true);
   assert.equal(catalog.expandedDemoProducts.every((product) => product.images.length > 0), true);
   const publicCatalog = await productRepository.getProducts();
-  assert.equal(publicCatalog.length, 15);
-  assert.equal(publicCatalog.every((product) => product.category === "accesorios-plata"), true);
-  assert.equal(publicCatalog.every((product) => !("stock" in product)), true);
-  assert.equal(publicCatalog.every((product) => !("variantInventory" in product)), true);
-  const inventoryValidationCatalog = await productRepository.getProductsForInventoryValidation();
-  assert.equal(inventoryValidationCatalog.length, 15);
-  assert.equal(inventoryValidationCatalog.every((product) => product.category === "accesorios-plata"), true);
+  assert.equal(publicCatalog.length, 0, "El catálogo público nunca debe usar fixtures demo como fallback.");
+  await assert.rejects(
+    productRepository.getProductsForInventoryValidation(),
+    /Sanity no está configurado/,
+  );
   const silverDemoProducts = catalog.expandedDemoProducts.filter((product) => product.category === "accesorios-plata");
   assert.equal(silverDemoProducts.every((product) => Boolean(product.catalogAttributes?.jewelryType)), true);
   assert.deepEqual(
@@ -74,7 +74,7 @@ try {
       measurements: "45 cm",
       quantityOrVolume: "Dato irrelevante",
     }).map(({ label, value }) => `${label}: ${value}`),
-    ["Material: Plata 925", "Color o acabado: Pulido", "Medidas: 45 cm"],
+    ["Material: Plata ley 925", "Color o acabado: Pulido", "Medidas: 45 cm"],
   );
 
   const filterFixtures = [
@@ -144,6 +144,27 @@ try {
     }).map((product) => product.id),
     ["filter-earring", "filter-stud"],
   );
+
+  assert.deepEqual(
+    silverCollectionConfig.silverCollections.map((collection) => collection.slug),
+    ["anillos", "aretes-y-topos", "cadenas", "dijes", "pulseras"],
+  );
+  const ringCollection = silverCollectionConfig.getSilverCollection("anillos");
+  const earringsCollection = silverCollectionConfig.getSilverCollection("aretes-y-topos");
+  assert.equal(silverCollectionConfig.belongsToSilverCollection(filterFixtures[0], ringCollection), true);
+  assert.equal(silverCollectionConfig.belongsToSilverCollection(filterFixtures[1], ringCollection), false);
+  assert.equal(silverCollectionConfig.belongsToSilverCollection(publicTypeFixtures[1], earringsCollection), true);
+  const ringSlides = carousel.getProductCarouselSlides([
+    { ...filterFixtures[0], images: [
+      { src: "/ring-one.png", alt: "Anillo uno" },
+      { src: "/ring-two.png", alt: "Anillo dos" },
+    ] },
+  ], ringCollection.heroImages);
+  assert.deepEqual(ringSlides.map((slide) => slide.src), ["/ring-one.png", "/ring-two.png"]);
+  const fallbackSlides = carousel.getProductCarouselSlides([
+    { ...filterFixtures[0], images: [{ src: "/single-ring.png", alt: "Anillo único" }] },
+  ], ringCollection.heroImages);
+  assert.deepEqual(fallbackSlides.map((slide) => slide.src), ringCollection.heroImages.map((slide) => slide.src));
 
   const andAcrossGroups = catalogFilters.filterCatalogProducts(filterFixtures, {
     ...catalogFilters.emptyCatalogFilters,

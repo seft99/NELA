@@ -19,7 +19,7 @@ export default defineType({
       options: {
         list: [
           { title: "Skincare", value: "skincare" },
-          { title: "Accesorios de Plata", value: "accesorios-plata" },
+          { title: "Accesorios de Plata Ley 925", value: "accesorios-plata" },
           { title: "Manillas de Oro", value: "manillas-oro" },
         ],
         layout: "radio",
@@ -29,6 +29,16 @@ export default defineType({
     defineField({ name: "shortDescription", title: "Descripción corta", type: "text", group: "customer", rows: 2, validation: (rule) => rule.required().max(180) }),
     defineField({ name: "description", title: "Descripción completa", type: "text", group: "customer", rows: 5, validation: (rule) => rule.required() }),
     defineField({ name: "price", title: "Precio en COP", type: "number", group: "customer", validation: (rule) => rule.required().integer().positive() }),
+    defineField({
+      name: "currency",
+      title: "Moneda",
+      type: "string",
+      group: "admin",
+      initialValue: "COP",
+      readOnly: true,
+      options: { list: [{ title: "Peso colombiano (COP)", value: "COP" }] },
+      validation: (rule) => rule.required().custom((value) => value === "COP" || "La moneda debe ser COP."),
+    }),
     defineField({ name: "reference", title: "Referencia comercial", type: "string", group: "customer", description: "SKU comercial opcional. No corresponde al ID interno del documento." }),
     defineField({
       name: "presentation",
@@ -137,6 +147,12 @@ export default defineType({
           hidden: ({ parent }) => parent?.jewelryType !== "dije",
         }),
         defineField({ name: "stone", title: "Piedra verificada", type: "string" }),
+        defineField({
+          name: "hasStone",
+          title: "Tiene piedra o detalle",
+          description: "Indicador booleano conservado desde el inventario validado.",
+          type: "boolean",
+        }),
       ],
     }),
     defineField({

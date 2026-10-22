@@ -5,7 +5,7 @@ import { getAvailableStock, isProductPurchasable } from "@/lib/products/inventor
 
 const CATEGORY_NAMES: Record<CategorySlug, string> = {
   skincare: "Skincare",
-  "accesorios-plata": "Accesorios de Plata",
+  "accesorios-plata": "Accesorios de Plata Ley 925",
   "manillas-oro": "Manillas de Oro",
 };
 

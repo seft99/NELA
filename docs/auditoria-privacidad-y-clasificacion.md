@@ -20,7 +20,7 @@ Fecha de revisión: 18 de octubre de 2026.
 - Proveedores definitivos, roles, ubicaciones, contratos y condiciones de transferencia o transmisión internacional.
 - Procedimiento interno para documentar autorizaciones de mercadeo si esa finalidad llega a utilizarse.
 
-## Clasificación de Accesorios de Plata
+## Clasificación de Accesorios de Plata Ley 925
 
 Se añadieron campos opcionales para público, tipo de joya, tallas de anillo, largos, tejido, motivo y piedra. Los filtros solo aparecen cuando hay valores disponibles.
 

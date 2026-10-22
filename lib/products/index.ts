@@ -1,4 +1,3 @@
-import { demoProducts } from "@/data/demo-products";
 import { cache } from "react";
 import { derivePublicAvailability } from "@/lib/products/inventory";
 import type { CategorySlug, Product } from "@/types/product";
@@ -17,6 +16,7 @@ const productProjection = `{
   shortDescription,
   description,
   price,
+  currency,
   reference,
   presentation,
   quantityOrVolume,
@@ -30,7 +30,8 @@ const productProjection = `{
     lengths,
     weaveType,
     motif,
-    stone
+    stone,
+    hasStone
   },
   "images": images[]{"src": asset->url, alt},
   "variants": variants[]{
@@ -49,7 +50,8 @@ const productProjection = `{
   "stock": coalesce(stock, inventoryQuantity, 0),
   "purchaseEnabled": coalesce(purchaseEnabled, available, false),
   visible,
-  displayOrder
+  displayOrder,
+  isDemo
 }`;
 
 const fetchSanityProducts = cache(async (includeHidden = false): Promise<Product[]> => {
@@ -59,8 +61,8 @@ const fetchSanityProducts = cache(async (includeHidden = false): Promise<Product
 
   const apiVersion = process.env.SANITY_API_VERSION || "2025-02-19";
   const filter = includeHidden
-    ? `*[_type == "product" && !(_id in path("drafts.**"))]`
-    : `*[_type == "product" && category == "${publicCategory}" && visible == true && !(_id in path("drafts.**"))]`;
+    ? `*[_type == "product" && category == "${publicCategory}" && isDemo != true && !(_id in path("drafts.**"))]`
+    : `*[_type == "product" && category == "${publicCategory}" && visible == true && isDemo != true && !(_id in path("drafts.**"))]`;
   const query = encodeURIComponent(`${filter} | order(displayOrder asc) ${productProjection}`);
   const endpoint = `https://${projectId}.api.sanity.io/v${apiVersion}/data/query/${dataset}?query=${query}`;
   const response = await fetch(endpoint, {
@@ -74,7 +76,8 @@ const fetchSanityProducts = cache(async (includeHidden = false): Promise<Product
 
 export async function getProducts(): Promise<Product[]> {
   if (!sanityConnectionRequested) {
-    return demoProducts.filter((product) => product.category === publicCategory).map(toPublicProduct);
+    console.error("Sanity no está configurado; el catálogo real no está disponible.");
+    return [];
   }
   if (!sanityConfigured) {
     console.error("La conexión con Sanity está incompleta; no se expondrá el catálogo demo como respaldo.");
@@ -102,7 +105,7 @@ export async function getProductBySlug(slug: string) {
 }
 
 export async function getProductsForInventoryValidation() {
-  if (!sanityConnectionRequested) return demoProducts.filter((product) => product.category === publicCategory);
+  if (!sanityConnectionRequested) throw new Error("Sanity no está configurado para validar el inventario.");
   if (!sanityConfigured) throw new Error("La conexión con Sanity está incompleta.");
   return (await fetchSanityProducts(true)).filter((product) => product.category === publicCategory);
 }

@@ -79,7 +79,7 @@ export function Header() {
           ))}
         </nav>
         <div className="header-actions">
-          <Link href="/accesorios-plata#catalogo" className="icon-button header-search" aria-label="Buscar accesorios de plata">
+          <Link href="/accesorios-plata#catalogo" className="icon-button header-search" aria-label="Buscar accesorios de plata ley 925">
             <Search size={19} />
           </Link>
           <CartIcon />

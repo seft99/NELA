@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CategoryPage } from "@/components/categories/category-page";
 import { silverCollections, belongsToSilverCollection, getSilverCollection } from "@/config/silver-collections";
-import { categories } from "@/data/demo-products";
+import { categories } from "@/config/categories";
 import { getProductsByCategory } from "@/lib/products";
+import { getProductCarouselSlides } from "@/lib/products/carousel";
 
 type SilverCollectionPageProps = { params: Promise<{ tipo: string }> };
 
@@ -15,7 +16,7 @@ export async function generateMetadata({ params }: SilverCollectionPageProps): P
   const collection = getSilverCollection((await params).tipo);
   if (!collection) return { title: "Categoría no encontrada" };
   return {
-    title: `${collection.label} de Plata`,
+    title: `${collection.label} de Plata Ley 925`,
     description: collection.description,
   };
 }
@@ -33,12 +34,13 @@ export default async function SilverCollectionPage({ params }: SilverCollectionP
       category={{
         ...silverCategory,
         name: collection.label,
-        eyebrow: "Colección de plata",
+        eyebrow: "Colección de plata ley 925",
         description: collection.description,
         image: collection.image,
         imageAlt: collection.imageAlt,
       }}
       products={products}
+      heroImages={getProductCarouselSlides(products, collection.heroImages)}
       catalogTitle={`Explora ${collection.label.toLocaleLowerCase("es")}`}
       catalogDescription="Filtra por precio, disponibilidad y características para encontrar la referencia indicada."
     />

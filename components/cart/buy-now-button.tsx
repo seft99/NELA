@@ -36,7 +36,7 @@ export function BuyNowButton({
   );
   const className = placement === "card"
     ? `product-add-button product-buy-button${compact ? " product-buy-button--compact" : ""}`
-    : "button button-outline purchase-buy-button";
+    : "button button-primary purchase-buy-button";
   const needsProductOptions = placement === "card" &&
     (product.variants?.some((variant) => variant.required) ?? false);
 
@@ -95,7 +95,7 @@ export function BuyNowButton({
       title={!checkout.isNumberValid ? "WhatsApp aún no está configurado" : undefined}
       aria-label={`Comprar ${product.name} ahora por WhatsApp`}
     >
-      <MessageCircle size={placement === "card" ? 15 : 17} aria-hidden="true" /> {compact ? "Comprar" : "Comprar ahora"}
+      <MessageCircle size={placement === "card" ? 15 : 17} aria-hidden="true" /> {compact ? "Comprar" : placement === "detail" ? "Comprar por WhatsApp" : "Comprar ahora"}
     </button>
   );
 }

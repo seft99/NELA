@@ -360,7 +360,7 @@ export function ProductExplorer({
         </div>
       </div>
       {visibleProducts.length ? (
-        <CatalogProductGrid products={visibleProducts} />
+        <CatalogProductGrid products={visibleProducts} context={context} />
       ) : (
         <div className="empty-state compact">
           <h2>{products.length === 0 ? "Catálogo temporalmente no disponible." : "No encontramos coincidencias."}</h2>

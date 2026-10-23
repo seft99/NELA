@@ -33,6 +33,32 @@ export function ProductPurchasePanel({ product }: { product: Product }) {
     ? (selectedVariants.length ? getAvailableStock(product, selectedVariants) : undefined)
     : product.stock;
 
+  const handleQuantityChange = async (nextQuantity: number) => {
+    if (nextQuantity <= quantity) {
+      setQuantity(Math.max(1, nextQuantity));
+      setFeedback(null);
+      return;
+    }
+    const selectionError = (product.variants ?? []).find((variant) => variant.required && !selections[variant.id]);
+    if (selectionError) {
+      setFeedback({ type: "error", message: `Selecciona ${selectionError.name.toLocaleLowerCase("es")} antes de aumentar la cantidad.` });
+      return;
+    }
+    try {
+      const validation = await validateInventoryLines([
+        productInventoryLine(product, nextQuantity, selectedVariants),
+      ]);
+      if (!validation.valid) {
+        setFeedback({ type: "error", message: validation.issues[0]?.message ?? "No hay más unidades disponibles." });
+        return;
+      }
+      setQuantity(nextQuantity);
+      setFeedback(null);
+    } catch (error) {
+      setFeedback({ type: "error", message: error instanceof Error ? error.message : "No fue posible confirmar las existencias." });
+    }
+  };
+
   const handleAdd = async () => {
     const selectionError = (product.variants ?? []).find((variant) => variant.required && !selections[variant.id]);
     if (selectionError) {
@@ -83,10 +109,16 @@ export function ProductPurchasePanel({ product }: { product: Product }) {
       ))}
       <div className="purchase-quantity-row">
         <span>Cantidad</span>
-        <QuantitySelector quantity={quantity} onChange={setQuantity} label={`Cantidad de ${product.name}`} max={selectedStock ?? undefined} />
+        <QuantitySelector
+          quantity={quantity}
+          onChange={(nextQuantity) => void handleQuantityChange(nextQuantity)}
+          label={`Cantidad de ${product.name}`}
+          max={selectedStock ?? undefined}
+          disabled={selectedStock === 0}
+        />
       </div>
       <div className="purchase-actions">
-        <button className="button button-primary purchase-add-button" type="button" onClick={() => void handleAdd()}>
+        <button className="button button-outline purchase-add-button" type="button" onClick={() => void handleAdd()}>
           <ShoppingBag size={17} aria-hidden="true" /> Agregar al carrito
         </button>
         <BuyNowButton
@@ -97,7 +129,8 @@ export function ProductPurchasePanel({ product }: { product: Product }) {
           onStatus={setFeedback}
         />
       </div>
-      <WhatsappPrivacyNotice />
+      <p className="purchase-process-note">Compra coordinada por WhatsApp. Te confirmaremos disponibilidad y detalles de tu pedido.</p>
+      <WhatsappPrivacyNotice className="purchase-privacy-note" />
       {feedback ? (
         <div className={`purchase-feedback ${feedback.type}`} role="status">
           {feedback.type === "success" ? <Check size={16} aria-hidden="true" /> : null}

@@ -17,6 +17,7 @@ try {
   const productRepository = await server.ssrLoadModule("/lib/products/index.ts");
   const publicDetails = await server.ssrLoadModule("/lib/products/public-details.ts");
   const catalogFilters = await server.ssrLoadModule("/lib/products/catalog-filters.ts");
+  const explorerConfig = await server.ssrLoadModule("/config/catalog-explorer.ts");
   const silverCollectionConfig = await server.ssrLoadModule("/config/silver-collections.ts");
   const carousel = await server.ssrLoadModule("/lib/products/carousel.ts");
   const categories = ["skincare", "accesorios-plata", "manillas-oro"];
@@ -111,13 +112,15 @@ try {
   const options = catalogFilters.getCatalogFilterOptions(filterFixtures);
   assert.equal(options.minPrice, 70000);
   assert.equal(options.maxPrice, 120000);
-  assert.deepEqual(options.audiences, ["hombre", "mujer", "unisex"]);
   assert.deepEqual(options.jewelryTypes, ["anillo", "cadena", "dije"]);
+  assert.deepEqual(options.productTypes, ["anillo", "cadena", "dije"]);
+  assert.deepEqual(options.ringSizes, ["6", "7"]);
+  assert.deepEqual(options.lengths, ["45 cm"]);
+  assert.equal(options.hasAvailabilityDifference, true);
   assert.equal(catalogFilters.jewelryFilterLabels.arete, "Aretes y topos");
-  assert.deepEqual(
-    catalogFilters.getCatalogPriceRanges(filterFixtures).map((range) => range.id),
-    ["hasta-80000", "80000-100000", "100000-120000"],
-  );
+  assert.deepEqual(explorerConfig.catalogExplorerConfigs.anillos.sortOptions, ["default", "price-asc", "price-desc", "name-asc", "name-desc"]);
+  assert.equal(explorerConfig.catalogExplorerConfigs["aretes-y-topos"].earringType, true);
+  assert.equal(explorerConfig.catalogExplorerConfigs.pulseras.search, false);
 
   const orWithinType = catalogFilters.filterCatalogProducts(filterFixtures, {
     ...catalogFilters.emptyCatalogFilters,
@@ -144,6 +147,13 @@ try {
     }).map((product) => product.id),
     ["filter-earring", "filter-stud"],
   );
+  assert.deepEqual(
+    catalogFilters.filterCatalogProducts(publicTypeFixtures, {
+      ...catalogFilters.emptyCatalogFilters,
+      productTypes: ["topo"],
+    }).map((product) => product.id),
+    ["filter-stud"],
+  );
 
   assert.deepEqual(
     silverCollectionConfig.silverCollections.map((collection) => collection.slug),
@@ -168,18 +178,19 @@ try {
 
   const andAcrossGroups = catalogFilters.filterCatalogProducts(filterFixtures, {
     ...catalogFilters.emptyCatalogFilters,
-    jewelryTypes: ["anillo", "cadena"],
-    audiences: ["unisex"],
+    jewelryTypes: ["cadena"],
+    lengths: ["45 cm"],
     minPrice: 100000,
     availableOnly: true,
   });
   assert.deepEqual(andAcrossGroups.map((product) => product.id), ["filter-chain-unisex"]);
 
-  const orWithinPrice = catalogFilters.filterCatalogProducts(filterFixtures, {
+  const numericPriceRange = catalogFilters.filterCatalogProducts(filterFixtures, {
     ...catalogFilters.emptyCatalogFilters,
-    priceRanges: ["hasta-80000", "100000-120000"],
+    minPrice: 80000,
+    maxPrice: 100000,
   });
-  assert.deepEqual(orWithinPrice.map((product) => product.id), ["filter-chain-unisex", "filter-pendant-man"]);
+  assert.deepEqual(numericPriceRange.map((product) => product.id), ["filter-ring-woman"]);
 
   assert.deepEqual(
     catalogFilters.filterCatalogProducts(filterFixtures, {
@@ -196,7 +207,41 @@ try {
     0,
   );
 
-  console.log("Catalog tests passed: demo data, public details, price limits, OR/AND filters, attributes and empty results.");
+  const searchFixtures = [
+    { ...filterFixtures[0], id: "search-venecia", name: "Cadena Venécia", reference: "NELA-CA-002" },
+    { ...filterFixtures[0], id: "search-brisa", name: "Brisa Verde", reference: "NELA-AN-006" },
+  ];
+  assert.deepEqual(
+    catalogFilters.filterCatalogProducts(searchFixtures, {
+      ...catalogFilters.emptyCatalogFilters,
+      query: "  VENECIA  ",
+    }).map((product) => product.id),
+    ["search-venecia"],
+  );
+  assert.deepEqual(
+    catalogFilters.filterCatalogProducts(searchFixtures, {
+      ...catalogFilters.emptyCatalogFilters,
+      query: "ca-00",
+    }).map((product) => product.id),
+    ["search-venecia"],
+  );
+  assert.deepEqual(
+    catalogFilters.filterCatalogProducts([
+      ...filterFixtures,
+      { ...filterFixtures[0], id: "hidden-product", visible: false },
+    ], catalogFilters.emptyCatalogFilters).map((product) => product.id),
+    ["filter-ring-woman", "filter-chain-unisex", "filter-pendant-man"],
+  );
+  assert.deepEqual(
+    catalogFilters.sortCatalogProducts(filterFixtures, "price-asc").map((product) => product.price),
+    [70000, 90000, 120000],
+  );
+  assert.deepEqual(
+    catalogFilters.sortCatalogProducts(searchFixtures, "name-desc").map((product) => product.id),
+    ["search-venecia", "search-brisa"],
+  );
+
+  console.log("Catalog tests passed: dynamic category config, normalized search, exact attributes, numeric price, stable sorting and hidden-product protection.");
 } finally {
   await server.close();
 }

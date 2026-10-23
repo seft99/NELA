@@ -24,7 +24,11 @@ export const siteConfig = {
   url: resolveSiteUrl(process.env.NEXT_PUBLIC_SITE_URL),
   announcement: {
     enabled: true,
-    text: "Catálogo boutique · Atención personalizada",
+    items: [
+      "Envíos a todo Colombia",
+      "Pago seguro",
+      "Atención personalizada",
+    ],
   },
   contact: {
     whatsappNumber: "573156951945",

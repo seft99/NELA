@@ -13,4 +13,14 @@ export const mainNavigation = [
   { href: "/accesorios-plata", label: "Catálogo Plata Ley 925" },
   { href: "/nosotros", label: "Nosotros" },
   { href: "/contacto", label: "Contacto" },
+  { href: "/preguntas-frecuentes", label: "Preguntas frecuentes" },
+  { href: "/politica-de-privacidad", label: "Privacidad" },
+] as const;
+
+export const primaryNavigation = [
+  ...silverCollections.map((collection) => ({
+    href: `/accesorios-plata/${collection.slug}`,
+    label: collection.label,
+  })),
+  { href: "/nosotros", label: "Nosotros" },
 ] as const;

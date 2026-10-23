@@ -9,13 +9,17 @@ import { mainNavigation, silverNavigationLinks } from "@/config/navigation";
 import { siteConfig } from "@/config/site";
 import { createWhatsappUrl } from "@/lib/whatsapp";
 
-export function MobileMenu() {
+export function MobileMenu({ productNavigation }: { productNavigation: Record<string, string> }) {
   const [open, setOpen] = useState(false);
   const [layerTop, setLayerTop] = useState(72);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const firstLinkRef = useRef<HTMLAnchorElement>(null);
   const panelRef = useRef<HTMLElement>(null);
   const pathname = usePathname();
+  const productSlug = pathname.startsWith("/productos/")
+    ? decodeURIComponent(pathname.slice("/productos/".length).split("/")[0] ?? "")
+    : "";
+  const activeProductCollection = productSlug ? productNavigation[productSlug] : undefined;
   const whatsappUrl = createWhatsappUrl(siteConfig.contact.whatsappNumber);
 
   useEffect(() => {
@@ -67,7 +71,9 @@ export function MobileMenu() {
   }, [open]);
 
   const closeMenu = () => setOpen(false);
-  const isCurrent = (href: string) => href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
+  const isCurrent = (href: string) => href === "/"
+    ? pathname === "/"
+    : href === activeProductCollection || pathname === href || pathname.startsWith(`${href}/`);
 
   return (
     <>
@@ -116,7 +122,13 @@ export function MobileMenu() {
                   </summary>
                   <div className="mobile-catalog-links">
                     {silverNavigationLinks.map((link) => (
-                      <Link key={link.href} href={link.href} className={pathname === link.href ? "is-active" : undefined} onClick={closeMenu}>
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        className={isCurrent(link.href) ? "is-active" : undefined}
+                        aria-current={isCurrent(link.href) ? "page" : undefined}
+                        onClick={closeMenu}
+                      >
                         {link.label} <ArrowUpRight size={15} aria-hidden="true" />
                       </Link>
                     ))}

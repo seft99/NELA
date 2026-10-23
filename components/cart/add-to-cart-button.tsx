@@ -8,30 +8,46 @@ import type { Product } from "@/types/product";
 import { isProductPurchasable } from "@/lib/products/inventory";
 import { productInventoryLine, validateInventoryLines } from "@/lib/cart/inventory-client";
 
-export function AddToCartButton({ product }: { product: Product }) {
+export function AddToCartButton({
+  product,
+  compact = false,
+}: {
+  product: Product;
+  compact?: boolean;
+}) {
   const { addProduct } = useCart();
   const [added, setAdded] = useState(false);
   const [checking, setChecking] = useState(false);
   const [blocked, setBlocked] = useState(false);
   const hasRequiredVariants = product.variants?.some((variant) => variant.required) ?? false;
+  const className = `product-add-button${compact ? " product-add-button--compact" : ""}`;
 
   if (!isProductPurchasable(product)) {
-    return <button className="product-add-button" type="button" disabled>Agregar al carrito</button>;
+    return (
+      <button className={className} type="button" disabled aria-label={`Agregar ${product.name} al carrito`}>
+        {compact ? "No disponible" : "Agregar al carrito"}
+      </button>
+    );
   }
 
   if (hasRequiredVariants) {
     return (
-      <Link className="product-add-button" href={`/productos/${product.slug}`}>
-        <ShoppingBag size={15} aria-hidden="true" /> Agregar al carrito
+      <Link
+        className={className}
+        href={`/productos/${product.slug}`}
+        aria-label={`Elegir opciones y agregar ${product.name} al carrito`}
+      >
+        <ShoppingBag size={15} aria-hidden="true" /> {compact ? "Carrito" : "Agregar al carrito"}
       </Link>
     );
   }
 
   return (
     <button
-      className={`product-add-button${added ? " is-added" : ""}`}
+      className={`${className}${added ? " is-added" : ""}`}
       type="button"
       disabled={checking || blocked}
+      aria-label={`Agregar ${product.name} al carrito`}
       onClick={async () => {
         setChecking(true);
         setBlocked(false);
@@ -52,7 +68,15 @@ export function AddToCartButton({ product }: { product: Product }) {
       }}
     >
       {added ? <Check size={15} aria-hidden="true" /> : <ShoppingBag size={15} aria-hidden="true" />}
-      {checking ? "Confirmando…" : blocked ? "No disponible" : added ? "Añadido" : "Agregar al carrito"}
+      {checking
+        ? "Confirmando…"
+        : blocked
+          ? "No disponible"
+          : added
+            ? "Añadido"
+            : compact
+              ? "Carrito"
+              : "Agregar al carrito"}
     </button>
   );
 }

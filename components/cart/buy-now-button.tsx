@@ -20,12 +20,14 @@ export function BuyNowButton({
   selectedVariants = [],
   placement,
   onStatus,
+  compact = false,
 }: {
   product: Product;
   quantity?: number;
   selectedVariants?: SelectedVariant[];
   placement: "card" | "detail";
   onStatus?: (status: PurchaseStatus) => void;
+  compact?: boolean;
 }) {
   const { whatsappNumber, siteUrl } = useCart();
   const checkout = useMemo(
@@ -33,19 +35,23 @@ export function BuyNowButton({
     [product, quantity, selectedVariants, siteUrl, whatsappNumber],
   );
   const className = placement === "card"
-    ? "product-add-button product-buy-button"
+    ? `product-add-button product-buy-button${compact ? " product-buy-button--compact" : ""}`
     : "button button-outline purchase-buy-button";
   const needsProductOptions = placement === "card" &&
     (product.variants?.some((variant) => variant.required) ?? false);
 
   if (!isProductPurchasable(product)) {
-    return <button className={className} type="button" disabled>Comprar ahora</button>;
+    return (
+      <button className={className} type="button" disabled aria-label={`Comprar ${product.name}`}>
+        {compact ? "No disponible" : "Comprar ahora"}
+      </button>
+    );
   }
 
   if (needsProductOptions) {
     return (
-      <Link className={className} href={`/productos/${product.slug}`}>
-        <MessageCircle size={15} aria-hidden="true" /> Comprar ahora
+      <Link className={className} href={`/productos/${product.slug}`} aria-label={`Elegir opciones para comprar ${product.name}`}>
+        <MessageCircle size={15} aria-hidden="true" /> {compact ? "Comprar" : "Comprar ahora"}
       </Link>
     );
   }
@@ -87,8 +93,9 @@ export function BuyNowButton({
       onClick={handleClick}
       disabled={placement === "card" && !checkout.isNumberValid}
       title={!checkout.isNumberValid ? "WhatsApp aún no está configurado" : undefined}
+      aria-label={`Comprar ${product.name} ahora por WhatsApp`}
     >
-      <MessageCircle size={placement === "card" ? 15 : 17} aria-hidden="true" /> Comprar ahora
+      <MessageCircle size={placement === "card" ? 15 : 17} aria-hidden="true" /> {compact ? "Comprar" : "Comprar ahora"}
     </button>
   );
 }

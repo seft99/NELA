@@ -5,6 +5,7 @@ import { siteConfig } from "@/config/site";
 import { SiteFrame } from "@/components/layout/site-frame";
 import { CartProvider } from "@/context/cart-context";
 import { getProducts } from "@/lib/products";
+import { getSilverCollectionForJewelryType } from "@/config/silver-collections";
 
 // The global cart reconciles against live inventory on every request.
 export const dynamic = "force-dynamic";
@@ -40,6 +41,11 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const catalog = await getProducts();
+  const productNavigation = Object.fromEntries(catalog.flatMap((product) => {
+    if (product.category !== "accesorios-plata") return [];
+    const collection = getSilverCollectionForJewelryType(product.catalogAttributes?.jewelryType);
+    return collection ? [[product.slug, `/accesorios-plata/${collection.slug}`]] : [];
+  }));
   const organizationJsonLd = JSON.stringify({
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -64,7 +70,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           whatsappNumber={siteConfig.contact.whatsappNumber}
           siteUrl={siteConfig.url}
         >
-          <SiteFrame>{children}</SiteFrame>
+          <SiteFrame productNavigation={productNavigation}>{children}</SiteFrame>
         </CartProvider>
       </body>
     </html>

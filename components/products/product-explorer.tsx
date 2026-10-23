@@ -3,42 +3,42 @@
 import { Check, ChevronDown, Search, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { WhatsappPrivacyNotice } from "@/components/privacy/whatsapp-privacy-notice";
+import {
+  catalogExplorerConfigs,
+  type CatalogExplorerContext,
+} from "@/config/catalog-explorer";
 import { formatCOP } from "@/config/site";
 import {
   emptyCatalogFilters,
   filterCatalogProducts,
   getCatalogFilterOptions,
-  getCatalogPriceRanges,
-  jewelryAudienceLabels,
   jewelryFilterLabels,
+  jewelryTypeLabels,
   sortCatalogProducts,
   type CatalogFilterState,
-  type CatalogPriceRange,
   type CatalogSort,
 } from "@/lib/products/catalog-filters";
-import type { JewelryAudience, JewelryType, Product } from "@/types/product";
-import { ScrollableProductGrid } from "./scrollable-product-grid";
+import type { JewelryType, Product } from "@/types/product";
+import { CatalogProductGrid } from "./catalog-product-grid";
 
-type ArrayFilterKey = "priceRanges" | "audiences" | "jewelryTypes" | "ringSizes" | "lengths" | "weaveTypes" | "motifs" | "stones" | "finishes";
+type ArrayFilterKey = "jewelryTypes" | "productTypes" | "ringSizes" | "lengths";
 
-const catalogSortOptions: Array<{ value: CatalogSort; label: string }> = [
-  { value: "featured", label: "Destacados" },
-  { value: "price-asc", label: "Precio: menor a mayor" },
-  { value: "price-desc", label: "Precio: mayor a menor" },
-  { value: "name", label: "Nombre" },
-];
+const sortLabels: Record<CatalogSort, string> = {
+  default: "Orden del catálogo",
+  "price-asc": "Precio: menor a mayor",
+  "price-desc": "Precio: mayor a menor",
+  "name-asc": "Nombre: A–Z",
+  "name-desc": "Nombre: Z–A",
+};
 
 const urlParamByFilter: Record<ArrayFilterKey, string> = {
-  priceRanges: "precio",
-  audiences: "publico",
   jewelryTypes: "tipo",
+  productTypes: "subtipo",
   ringSizes: "talla",
   lengths: "largo",
-  weaveTypes: "tejido",
-  motifs: "motivo",
-  stones: "piedra",
-  finishes: "acabado",
 };
+
+const obsoleteParams = ["precio", "publico", "tejido", "motivo", "piedra", "acabado"];
 
 function readList(params: URLSearchParams, name: string, allowed: string[]) {
   const allowedValues = new Set(allowed);
@@ -52,27 +52,33 @@ function readPrice(params: URLSearchParams, name: string, lower: number, upper: 
   return Number.isFinite(value) ? Math.min(upper, Math.max(lower, Math.round(value))) : null;
 }
 
-function priceRangeLabel(range: CatalogPriceRange) {
-  if (range.minExclusive < 0) return `Hasta ${formatCOP(range.maxInclusive)}`;
-  if (!Number.isFinite(range.maxInclusive)) return `Más de ${formatCOP(range.minExclusive)}`;
-  return `${formatCOP(range.minExclusive)} – ${formatCOP(range.maxInclusive)}`;
+function normalizeSort(value: string | null): CatalogSort {
+  if (value === "name") return "name-asc";
+  if (value === "featured") return "default";
+  if (value === "price-asc" || value === "price-desc" || value === "name-asc" || value === "name-desc") return value;
+  return "default";
 }
 
 export function ProductExplorer({
   products,
-  enableJewelryFilters = false,
+  context = "all",
 }: {
   products: Product[];
-  enableJewelryFilters?: boolean;
+  context?: CatalogExplorerContext;
 }) {
+  const config = catalogExplorerConfigs[context];
   const options = useMemo(() => getCatalogFilterOptions(products), [products]);
-  const priceRangeOptions = useMemo(() => getCatalogPriceRanges(products), [products]);
   const [filters, setFilters] = useState<CatalogFilterState>(emptyCatalogFilters);
-  const [sort, setSort] = useState<CatalogSort>("featured");
+  const [sort, setSort] = useState<CatalogSort>("default");
   const [urlReady, setUrlReady] = useState(false);
   const [priceDraft, setPriceDraft] = useState({ min: "", max: "" });
   const [priceDraftError, setPriceDraftError] = useState("");
   const sortMenuRef = useRef<HTMLDetailsElement>(null);
+
+  const earringTypes = useMemo(
+    () => options.productTypes.filter((type) => type === "argolla" || type === "topo" || type === "arete"),
+    [options.productTypes],
+  );
 
   useEffect(() => {
     const closeOnOutsideClick = (event: PointerEvent) => {
@@ -87,61 +93,74 @@ export function ProductExplorer({
   useEffect(() => {
     const applyUrl = () => {
       const params = new URLSearchParams(window.location.search);
-      const minPrice = readPrice(params, "precioMin", options.minPrice, options.maxPrice);
-      const maxPrice = readPrice(params, "precioMax", options.minPrice, options.maxPrice);
+      const jewelryTypes = config.category
+        ? readList(params, "tipo", options.jewelryTypes).slice(0, 1) as JewelryType[]
+        : [];
+      const selectedCategory = jewelryTypes[0];
+      const ringSizeEnabled = config.ringSize || (context === "all" && selectedCategory === "anillo");
+      const lengthEnabled = config.length || (context === "all" && selectedCategory === "cadena");
+      const minPrice = config.price ? readPrice(params, "precioMin", options.minPrice, options.maxPrice) : null;
+      const maxPrice = config.price ? readPrice(params, "precioMax", options.minPrice, options.maxPrice) : null;
+      const validPriceRange = minPrice === null || maxPrice === null || minPrice <= maxPrice;
+
       setFilters({
-        query: params.get("buscar") ?? "",
-        availableOnly: params.get("disponibles") === "1",
-        minPrice: minPrice !== null && maxPrice !== null && minPrice > maxPrice ? null : minPrice,
-        maxPrice: minPrice !== null && maxPrice !== null && minPrice > maxPrice ? null : maxPrice,
-        priceRanges: readList(params, "precio", priceRangeOptions.map((range) => range.id)),
-        audiences: readList(params, "publico", options.audiences) as JewelryAudience[],
-        jewelryTypes: readList(params, "tipo", options.jewelryTypes) as JewelryType[],
-        ringSizes: readList(params, "talla", options.ringSizes),
-        lengths: readList(params, "largo", options.lengths),
-        weaveTypes: readList(params, "tejido", options.weaveTypes),
-        motifs: readList(params, "motivo", options.motifs),
-        stones: readList(params, "piedra", options.stones),
-        finishes: readList(params, "acabado", options.finishes),
+        query: config.search ? params.get("buscar") ?? "" : "",
+        availableOnly: options.hasAvailabilityDifference && params.get("disponibles") === "1",
+        minPrice: validPriceRange ? minPrice : null,
+        maxPrice: validPriceRange ? maxPrice : null,
+        jewelryTypes,
+        productTypes: config.earringType
+          ? readList(params, "subtipo", earringTypes).slice(0, 1) as JewelryType[]
+          : [],
+        ringSizes: ringSizeEnabled ? readList(params, "talla", options.ringSizes).slice(0, 1) : [],
+        lengths: lengthEnabled ? readList(params, "largo", options.lengths).slice(0, 1) : [],
       });
-      setPriceDraft({ min: minPrice === null ? "" : String(minPrice), max: maxPrice === null ? "" : String(maxPrice) });
+      setPriceDraft({
+        min: validPriceRange && minPrice !== null ? String(minPrice) : "",
+        max: validPriceRange && maxPrice !== null ? String(maxPrice) : "",
+      });
       setPriceDraftError("");
-      const nextSort = params.get("orden");
-      setSort(nextSort === "price-asc" || nextSort === "price-desc" || nextSort === "name" ? nextSort : "featured");
+      const nextSort = normalizeSort(params.get("orden"));
+      setSort(config.sortOptions.includes(nextSort) ? nextSort : "default");
       setUrlReady(true);
     };
     applyUrl();
     window.addEventListener("popstate", applyUrl);
     return () => window.removeEventListener("popstate", applyUrl);
-  }, [options, priceRangeOptions]);
-
-  const invalidPriceRange = filters.minPrice !== null && filters.maxPrice !== null && filters.minPrice > filters.maxPrice;
+  }, [config, context, earringTypes, options]);
 
   useEffect(() => {
-    if (!urlReady || invalidPriceRange) return;
+    if (!urlReady) return;
     const url = new URL(window.location.href);
     const params = url.searchParams;
     const setOrDelete = (name: string, value: string) => value ? params.set(name, value) : params.delete(name);
-    setOrDelete("buscar", filters.query.trim());
-    setOrDelete("disponibles", filters.availableOnly ? "1" : "");
-    setOrDelete("precioMin", filters.minPrice === null ? "" : String(filters.minPrice));
-    setOrDelete("precioMax", filters.maxPrice === null ? "" : String(filters.maxPrice));
-    setOrDelete("orden", sort === "featured" ? "" : sort);
+    obsoleteParams.forEach((name) => params.delete(name));
+    setOrDelete("buscar", config.search ? filters.query.trim() : "");
+    setOrDelete("disponibles", options.hasAvailabilityDifference && filters.availableOnly ? "1" : "");
+    setOrDelete("precioMin", config.price && filters.minPrice !== null ? String(filters.minPrice) : "");
+    setOrDelete("precioMax", config.price && filters.maxPrice !== null ? String(filters.maxPrice) : "");
+    setOrDelete("orden", sort === "default" ? "" : sort);
     (Object.keys(urlParamByFilter) as ArrayFilterKey[]).forEach((key) => {
       setOrDelete(urlParamByFilter[key], filters[key].join(","));
     });
     window.history.replaceState(null, "", `${url.pathname}${params.size ? `?${params.toString()}` : ""}${url.hash}`);
-  }, [filters, invalidPriceRange, sort, urlReady]);
+  }, [config, filters, options.hasAvailabilityDifference, sort, urlReady]);
 
-  const visibleProducts = useMemo(() => {
-    if (invalidPriceRange) return [];
-    return sortCatalogProducts(filterCatalogProducts(products, filters), sort);
-  }, [filters, invalidPriceRange, products, sort]);
+  const visibleProducts = useMemo(
+    () => sortCatalogProducts(filterCatalogProducts(products, filters), sort),
+    [filters, products, sort],
+  );
 
-  const setArrayFilter = (key: ArrayFilterKey, value: string, checked: boolean) => {
+  const setSingleFilter = (key: ArrayFilterKey, value: string) => {
+    setFilters((current) => ({ ...current, [key]: value ? [value] : [] }));
+  };
+
+  const selectCategory = (value: string) => {
     setFilters((current) => ({
       ...current,
-      [key]: checked ? [...current[key], value] : current[key].filter((item) => item !== value),
+      jewelryTypes: value ? [value as JewelryType] : [],
+      ringSizes: value === "anillo" ? current.ringSizes : [],
+      lengths: value === "cadena" ? current.lengths : [],
     }));
   };
 
@@ -162,24 +181,12 @@ export function ProductExplorer({
       return;
     }
     setPriceDraftError("");
-    setFilters((current) => ({ ...current, minPrice, maxPrice, priceRanges: [] }));
-  };
-
-  const togglePriceRange = (value: string, checked: boolean) => {
-    setPriceDraft({ min: "", max: "" });
-    setPriceDraftError("");
-    setFilters((current) => ({
-      ...current,
-      minPrice: null,
-      maxPrice: null,
-      priceRanges: checked
-        ? [...current.priceRanges, value]
-        : current.priceRanges.filter((item) => item !== value),
-    }));
+    setFilters((current) => ({ ...current, minPrice, maxPrice }));
   };
 
   const clearFilters = () => {
     setFilters(emptyCatalogFilters);
+    setSort("default");
     setPriceDraft({ min: "", max: "" });
     setPriceDraftError("");
   };
@@ -190,98 +197,131 @@ export function ProductExplorer({
     if (filters.availableOnly) chips.push({ id: "available", label: "Solo disponibles", remove: () => setFilters((current) => ({ ...current, availableOnly: false })) });
     if (filters.minPrice !== null) chips.push({ id: "min", label: `Desde ${formatCOP(filters.minPrice)}`, remove: () => { setFilters((current) => ({ ...current, minPrice: null })); setPriceDraft((current) => ({ ...current, min: "" })); } });
     if (filters.maxPrice !== null) chips.push({ id: "max", label: `Hasta ${formatCOP(filters.maxPrice)}`, remove: () => { setFilters((current) => ({ ...current, maxPrice: null })); setPriceDraft((current) => ({ ...current, max: "" })); } });
-    const priceLabels = Object.fromEntries(priceRangeOptions.map((range) => [range.id, priceRangeLabel(range)]));
-    const labelsByKey: Record<ArrayFilterKey, Record<string, string>> = {
-      priceRanges: priceLabels,
-      audiences: jewelryAudienceLabels,
-      jewelryTypes: jewelryFilterLabels as Record<string, string>,
-      ringSizes: {}, lengths: {}, weaveTypes: {}, motifs: {}, stones: {}, finishes: {},
-    };
-    (Object.keys(urlParamByFilter) as ArrayFilterKey[]).forEach((key) => {
-      filters[key].forEach((value) => chips.push({
-        id: `${key}-${value}`,
-        label: labelsByKey[key][value] ?? value,
-        remove: () => setArrayFilter(key, value, false),
-      }));
-    });
+    filters.jewelryTypes.forEach((value) => chips.push({ id: `type-${value}`, label: jewelryFilterLabels[value] ?? jewelryTypeLabels[value], remove: () => selectCategory("") }));
+    filters.productTypes.forEach((value) => chips.push({ id: `subtype-${value}`, label: jewelryTypeLabels[value], remove: () => setSingleFilter("productTypes", "") }));
+    filters.ringSizes.forEach((value) => chips.push({ id: `size-${value}`, label: `Talla ${value}`, remove: () => setSingleFilter("ringSizes", "") }));
+    filters.lengths.forEach((value) => chips.push({ id: `length-${value}`, label: value, remove: () => setSingleFilter("lengths", "") }));
     return chips;
-  }, [filters, priceRangeOptions]);
+  }, [filters]);
 
-  const filterGroups = ([
-    { key: "audiences", label: "Público", values: options.audiences, labels: jewelryAudienceLabels as Record<string, string> },
-    { key: "ringSizes", label: "Talla de anillo", values: options.ringSizes },
-    { key: "lengths", label: "Largo", values: options.lengths },
-    { key: "weaveTypes", label: "Tipo de tejido", values: options.weaveTypes },
-    { key: "motifs", label: "Motivo o diseño", values: options.motifs },
-    { key: "stones", label: "Piedra", values: options.stones },
-    { key: "finishes", label: "Acabado", values: options.finishes },
-  ] as Array<{ key: ArrayFilterKey; label: string; values: string[]; labels?: Record<string, string> }>).filter((group) => group.values.length > 0);
-
-  const resetKey = JSON.stringify({ filters, sort });
-  const activeSortLabel = catalogSortOptions.find((option) => option.value === sort)?.label ?? "Destacados";
+  const selectedCategory = filters.jewelryTypes[0];
+  const showSearch = config.search;
+  const showAvailability = options.hasAvailabilityDifference;
+  const showSort = config.sortOptions.length > 1;
+  const showCategoryFilter = config.category && options.jewelryTypes.length > 1;
+  const showPriceFilter = config.price && options.minPrice < options.maxPrice;
+  const showRingSizeFilter = (config.ringSize || (context === "all" && selectedCategory === "anillo"))
+    && options.ringSizes.length > 1;
+  const showLengthFilter = (config.length || (context === "all" && selectedCategory === "cadena"))
+    && options.lengths.length > 1;
+  const showEarringTypeFilter = config.earringType && earringTypes.length > 1;
+  const showControls = showSearch || showAvailability || showSort;
+  const showFilterPanel = showCategoryFilter || showPriceFilter || showRingSizeFilter
+    || showLengthFilter || showEarringTypeFilter;
+  const activeSortLabel = sortLabels[sort];
 
   const selectSort = (value: CatalogSort) => {
     setSort(value);
     sortMenuRef.current?.removeAttribute("open");
   };
 
+  const renderChoiceChips = (
+    legend: string,
+    name: string,
+    selected: string,
+    values: string[],
+    onChange: (value: string) => void,
+    labelFor: (value: string) => string = (value) => value,
+  ) => (
+    <div className="catalog-chip-group" role="group" aria-label={legend}>
+      <span className="catalog-filter-label">{legend}</span>
+      <div className="filter-options catalog-filter-chips">
+        <label className={!selected ? "is-selected" : undefined}>
+          <input type="radio" name={name} checked={!selected} onChange={() => onChange("")} />
+          <span>Todas</span>
+        </label>
+        {values.map((value) => (
+          <label key={value} className={selected === value ? "is-selected" : undefined}>
+            <input type="radio" name={name} checked={selected === value} onChange={() => onChange(value)} />
+            <span>{labelFor(value)}</span>
+          </label>
+        ))}
+      </div>
+    </div>
+  );
+
   return (
     <div id="catalogo" className="catalog-section">
-      <div className="catalog-controls">
-        <label className="search-control">
-          <span className="sr-only">Buscar productos</span>
-          <Search size={18} aria-hidden="true" />
-          <input value={filters.query} onChange={(event) => setFilters((current) => ({ ...current, query: event.target.value }))} placeholder="Buscar por nombre o referencia" />
-        </label>
-        <label className="availability-control">
-          <input type="checkbox" checked={filters.availableOnly} onChange={(event) => setFilters((current) => ({ ...current, availableOnly: event.target.checked }))} />
-          Solo disponibles
-        </label>
-        <div className="sort-control">
-          <span>Ordenar</span>
-          <details
-            ref={sortMenuRef}
-            className="sort-menu"
-            onKeyDown={(event) => {
-              if (event.key === "Escape" && sortMenuRef.current?.open) {
-                sortMenuRef.current.removeAttribute("open");
-                sortMenuRef.current.querySelector("summary")?.focus();
-              }
-            }}
-          >
-            <summary aria-label={`Orden actual: ${activeSortLabel}`}>
-              <span>{activeSortLabel}</span>
-              <ChevronDown size={16} aria-hidden="true" />
-            </summary>
-            <div className="sort-options" aria-label="Opciones de orden">
-              {catalogSortOptions.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  className={sort === option.value ? "is-selected" : undefined}
-                  aria-pressed={sort === option.value}
-                  onClick={() => selectSort(option.value)}
-                >
-                  <span>{option.label}</span>
-                  <Check size={15} aria-hidden="true" />
-                </button>
-              ))}
+      {showControls ? (
+        <div className="catalog-controls">
+          {showSearch ? (
+            <label className="search-control">
+              <span className="sr-only">Buscar productos</span>
+              <Search size={18} aria-hidden="true" />
+              <input value={filters.query} onChange={(event) => setFilters((current) => ({ ...current, query: event.target.value }))} placeholder="Buscar por nombre o referencia" />
+            </label>
+          ) : null}
+          {showAvailability ? (
+            <label className="availability-control">
+              <input type="checkbox" checked={filters.availableOnly} onChange={(event) => setFilters((current) => ({ ...current, availableOnly: event.target.checked }))} />
+              Solo disponibles
+            </label>
+          ) : null}
+          {showSort ? (
+            <div className="sort-control">
+              <span>Ordenar</span>
+              <details
+                ref={sortMenuRef}
+                className="sort-menu"
+                onKeyDown={(event) => {
+                  if (event.key === "Escape" && sortMenuRef.current?.open) {
+                    sortMenuRef.current.removeAttribute("open");
+                    sortMenuRef.current.querySelector("summary")?.focus();
+                  }
+                }}
+              >
+                <summary aria-label={`Orden actual: ${activeSortLabel}`}>
+                  <span>{activeSortLabel}</span>
+                  <ChevronDown size={16} aria-hidden="true" />
+                </summary>
+                <div className="sort-options" aria-label="Opciones de orden">
+                  {config.sortOptions.map((value) => (
+                    <button
+                      key={value}
+                      type="button"
+                      className={sort === value ? "is-selected" : undefined}
+                      aria-pressed={sort === value}
+                      onClick={() => selectSort(value)}
+                    >
+                      <span>{sortLabels[value]}</span>
+                      <Check size={15} aria-hidden="true" />
+                    </button>
+                  ))}
+                </div>
+              </details>
             </div>
-          </details>
+          ) : null}
         </div>
-      </div>
+      ) : null}
 
-      {enableJewelryFilters && products.length ? (
-        <details className="catalog-filter-panel" open>
-          <summary>
-            <span>Filtros de la colección {activeChips.length ? `(${activeChips.length})` : ""}</span>
-            <ChevronDown size={17} aria-hidden="true" />
-          </summary>
-          <div className="catalog-filter-body">
-            <details className="filter-accordion price-filter" open>
-              <summary><span>Precio</span><ChevronDown size={17} aria-hidden="true" /></summary>
-              <div className="filter-accordion-content">
-                <p id="price-limits">Límites: {formatCOP(options.minPrice)} a {formatCOP(options.maxPrice)} COP</p>
+      <div className={`catalog-filter-row${showFilterPanel ? "" : " catalog-filter-row--results-only"}`}>
+        {showFilterPanel ? (
+          <div className="catalog-filter-groups">
+            {showCategoryFilter ? (
+              renderChoiceChips(
+                "Tipo de joya",
+                "catalog-category",
+                selectedCategory ?? "",
+                options.jewelryTypes,
+                selectCategory,
+                (value) => jewelryFilterLabels[value as JewelryType] ?? jewelryTypeLabels[value as JewelryType],
+              )
+            ) : null}
+
+            {showPriceFilter ? (
+              <div className="catalog-chip-group catalog-price-group" role="group" aria-label="Precio">
+                <span className="catalog-filter-label">Precio</span>
+                <p id="price-limits" className="sr-only">Límites: {formatCOP(options.minPrice)} a {formatCOP(options.maxPrice)} COP</p>
                 <div className="price-custom-row">
                   <label htmlFor="catalog-price-min">
                     <span className="sr-only">Precio mínimo</span>
@@ -294,61 +334,41 @@ export function ProductExplorer({
                   <button type="button" className="price-apply" onClick={applyPriceDraft}>Filtrar</button>
                 </div>
                 {priceDraftError ? <p id="price-error" className="filter-error" role="alert">{priceDraftError}</p> : null}
-                <div className="filter-options price-range-options" aria-label="Rangos de precio">
-                  {priceRangeOptions.map((range) => (
-                    <label key={range.id}>
-                      <input type="checkbox" checked={filters.priceRanges.includes(range.id)} onChange={(event) => togglePriceRange(range.id, event.target.checked)} />
-                      <span>{priceRangeLabel(range)}</span>
-                    </label>
-                  ))}
-                </div>
               </div>
-            </details>
+            ) : null}
 
-            {filterGroups.map((group) => (
-              <details className="filter-accordion filter-group" key={group.key}>
-                <summary><span>{group.label}</span><ChevronDown size={17} aria-hidden="true" /></summary>
-                <div className="filter-accordion-content filter-options">
-                    {group.values.map((value) => (
-                      <label key={value}>
-                        <input type="checkbox" checked={(filters[group.key] as string[]).includes(value)} onChange={(event) => setArrayFilter(group.key, value, event.target.checked)} />
-                        <span>{group.labels?.[value] ?? value}</span>
-                      </label>
-                    ))}
-                </div>
-              </details>
-            ))}
-          </div>
-        </details>
-      ) : null}
+            {showRingSizeFilter ? (
+              renderChoiceChips("Talla", "catalog-ring-size", filters.ringSizes[0] ?? "", options.ringSizes, (value) => setSingleFilter("ringSizes", value), (value) => `Talla ${value}`)
+            ) : null}
 
-      {activeChips.length ? (
-        <div className="active-filters" aria-label="Filtros activos">
-          <span>Filtros activos</span>
-          <div>
-            {activeChips.map((chip) => (
-              <button key={chip.id} type="button" onClick={chip.remove} aria-label={`Quitar filtro ${chip.label}`}>
-                {chip.label} <X size={13} aria-hidden="true" />
-              </button>
-            ))}
-            <button className="clear-filters" type="button" onClick={clearFilters}>Limpiar todo</button>
+            {showLengthFilter ? (
+              renderChoiceChips("Longitud", "catalog-length", filters.lengths[0] ?? "", options.lengths, (value) => setSingleFilter("lengths", value))
+            ) : null}
+
+            {showEarringTypeFilter ? (
+              renderChoiceChips("Tipo", "catalog-earring-type", filters.productTypes[0] ?? "", earringTypes, (value) => setSingleFilter("productTypes", value), (value) => jewelryTypeLabels[value as JewelryType])
+            ) : null}
           </div>
+        ) : <span aria-hidden="true" />}
+        <div className="catalog-result-row">
+          {activeChips.length ? (
+            <button className="clear-filters" type="button" onClick={clearFilters}>
+              Limpiar filtros <X size={13} aria-hidden="true" />
+            </button>
+          ) : null}
+          <p aria-live="polite" aria-atomic="true">{visibleProducts.length} {visibleProducts.length === 1 ? "referencia" : "referencias"}</p>
         </div>
-      ) : null}
-
-      <div className="catalog-result-row" aria-live="polite" aria-atomic="true">
-        <p>{visibleProducts.length} {visibleProducts.length === 1 ? "referencia" : "referencias"}</p>
       </div>
-      <WhatsappPrivacyNotice className="catalog-privacy-note" />
       {visibleProducts.length ? (
-        <ScrollableProductGrid key={resetKey} products={visibleProducts} resetKey={resetKey} />
+        <CatalogProductGrid products={visibleProducts} />
       ) : (
         <div className="empty-state compact">
-          <h2>{products.length === 0 ? "Catálogo temporalmente no disponible." : invalidPriceRange ? "Revisa el rango de precio." : "No encontramos coincidencias."}</h2>
-          <p>{products.length === 0 ? "Estamos actualizando la colección. Intenta nuevamente más tarde o escríbenos por WhatsApp." : invalidPriceRange ? "El valor mínimo debe ser menor o igual al máximo." : "Prueba otra búsqueda o cambia los filtros."}</p>
+          <h2>{products.length === 0 ? "Catálogo temporalmente no disponible." : "No encontramos coincidencias."}</h2>
+          <p>{products.length === 0 ? "Estamos actualizando la colección. Intenta nuevamente más tarde o escríbenos por WhatsApp." : "Prueba otra búsqueda o cambia los filtros aplicados."}</p>
           {activeChips.length ? <button className="text-link empty-reset" type="button" onClick={clearFilters}>Limpiar filtros</button> : null}
         </div>
       )}
+      <WhatsappPrivacyNotice className="catalog-privacy-note" />
     </div>
   );
 }

@@ -14,6 +14,7 @@ export default async function SilverPage() {
       category={categories[1]}
       products={products}
       heroImages={getProductCarouselSlides(products, defaultStoreCarouselSlides)}
+      catalogContext="all"
     />
   );
 }

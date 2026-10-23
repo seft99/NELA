@@ -1,115 +1,108 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowDown, ArrowRight, Sparkles } from "lucide-react";
-import { getFeaturedProducts } from "@/lib/products";
-import { ProductGrid } from "@/components/products/product-grid";
+import { ArrowRight, MessageCircle } from "lucide-react";
+import { getProducts } from "@/lib/products";
 import { WhatsappButton } from "@/components/ui/whatsapp-button";
 import { StoreImageCarousel } from "@/components/home/store-image-carousel";
-import { silverCollections } from "@/config/silver-collections";
+import { FavoritesEditorial } from "@/components/home/favorites-editorial";
+import { BrandEssenceEditorial } from "@/components/home/brand-essence-editorial";
+import { belongsToSilverCollection, silverCollections } from "@/config/silver-collections";
 
 export default async function HomePage() {
-  const featuredProducts = await getFeaturedProducts();
+  const products = await getProducts();
+  const featuredProducts = products.filter((product) => product.featured);
+  const homeCollections = silverCollections.map((collection) => {
+    const eligibleProducts = products.filter((item) => (
+      belongsToSilverCollection(item, collection) && item.images.some((image) => Boolean(image.src))
+    ));
+    const product = eligibleProducts.find((item) => item.reference === collection.homeImageReference)
+      ?? eligibleProducts[0];
+    const image = product?.images[collection.homeImageIndex]
+      ?? product?.images.find((item) => Boolean(item.src));
+    return { collection, image, productName: product?.name };
+  });
 
   return (
     <div id="contenido">
       <section className="home-hero">
-        <div className="home-hero-image" aria-hidden="true">
-          <Image src="/images/editorial/hero-nela-demo.png" alt="" fill priority sizes="100vw" />
-        </div>
-        <div className="page-shell home-hero-inner">
-          <div className="hero-copy reveal">
-            <p className="eyebrow">Accesorios de plata ley 925 · Detalles</p>
-            <h1>La belleza está<br />en los detalles.</h1>
-            <p className="hero-description">
-              Descubre accesorios de plata ley 925 elegidos para acompañar tu estilo todos los días.
-            </p>
-            <div className="hero-actions">
-              <Link href="/accesorios-plata#catalogo" className="button button-primary">Explorar catálogo <ArrowRight size={17} /></Link>
-              <Link href="/nosotros" className="text-link">Conocer NELA</Link>
+        <div className="home-hero-layout">
+          <div className="home-hero-copy-panel">
+            <div className="hero-copy reveal">
+              <p className="eyebrow">Joyería que te acompaña</p>
+              <h1>Detalles<br />que perduran</h1>
+              <p className="hero-description">
+                Piezas en plata ley 925, diseñadas para acompañar tus momentos más especiales y también los de todos los días.
+              </p>
+              <Link href="/accesorios-plata#catalogo" className="button home-hero-cta">
+                Descubre la colección <ArrowRight size={16} aria-hidden="true" />
+              </Link>
             </div>
           </div>
-          <div className="hero-note">
-            <span className="vertical-line" aria-hidden="true" />
-            <p>Una boutique digital creada para descubrir con calma.</p>
+          <div className="home-hero-image">
+            <StoreImageCarousel
+              ariaLabel="Selección editorial NELA Joyería"
+              priority
+              signatureLines={["Belleza", "en cada", "historia"]}
+            />
           </div>
         </div>
-        <Link href="#universo-plata" className="scroll-cue" aria-label="Conocer el universo de plata ley 925 NELA">
-          <ArrowDown size={18} />
-        </Link>
       </section>
 
-      <section className="intro-strip page-shell" aria-label="Introducción">
-        <span>01</span>
-        <p>Plata ley 925. Sutil. Atemporal.</p>
-        <span className="intro-rule" />
-        <Sparkles size={18} strokeWidth={1.3} />
-      </section>
-
-      <section className="silver-focus-section page-shell" id="universo-plata">
-        <div className="silver-focus-grid">
-          <div className="silver-focus-image image-reveal">
-            <StoreImageCarousel />
-            <span className="silver-focus-number">02</span>
+      <section className="home-collections page-shell" id="universo-plata" aria-labelledby="home-collections-title">
+        <div className="home-collections-heading">
+          <div>
+            <span className="home-collections-line" aria-hidden="true" />
+            <h2 id="home-collections-title">Nuestras colecciones</h2>
           </div>
-          <div className="silver-focus-copy">
-            <p className="eyebrow">Una colección, muchas formas</p>
-            <h2>Plata ley 925 para acompañar cada versión de ti.</h2>
-            <p>
-              Encuentra piezas delicadas y contemporáneas para combinar, regalar y convertir en parte de tu estilo.
-            </p>
-            <ul className="silver-types" aria-label="Tipos de accesorios disponibles">
-              {silverCollections.map((collection) => (
-                <li key={collection.slug}>
-                  <Link href={`/accesorios-plata/${collection.slug}`}>{collection.label}</Link>
-                </li>
-              ))}
-            </ul>
-            <Link href="/accesorios-plata#catalogo" className="button button-outline">
-              Ver todos los accesorios <ArrowRight size={17} />
+          <Link href="/accesorios-plata#catalogo">Ver todas <ArrowRight size={15} aria-hidden="true" /></Link>
+        </div>
+        <div className="home-collections-grid">
+          {homeCollections.map(({ collection, image, productName }) => (
+            <Link
+              href={`/accesorios-plata/${collection.slug}`}
+              className="home-collection-item"
+              key={collection.slug}
+            >
+              <span className="home-collection-image">
+                {image ? (
+                  <Image
+                    src={image.src}
+                    alt={image.alt || `${productName || collection.label} de NELA Joyería`}
+                    fill
+                    sizes="(max-width: 560px) 42vw, (max-width: 1000px) 28vw, 190px"
+                  />
+                ) : (
+                  <span className="home-collection-placeholder">Colección en preparación</span>
+                )}
+              </span>
+              <h3>{collection.label}</h3>
+              <span className="home-collection-link">
+                Descubrir <ArrowRight size={13} aria-hidden="true" />
+              </span>
             </Link>
-          </div>
+          ))}
         </div>
       </section>
 
-      <section className="section favorites-section" id="favoritos">
-        <div className="page-shell">
-          <div className="section-heading split-heading">
-            <div>
-              <p className="eyebrow">Selección de la boutique</p>
-              <h2>Nuestros favoritos</h2>
-            </div>
-            <p>Una selección de accesorios de plata ley 925 para descubrir los detalles que definen el universo NELA.</p>
-          </div>
-          <ProductGrid products={featuredProducts} />
-          <div className="center-action">
-            <Link href="/accesorios-plata" className="text-link">Explorar el catálogo</Link>
-          </div>
-        </div>
-      </section>
+      <FavoritesEditorial products={featuredProducts} />
 
-      <section className="editorial-section page-shell">
-        <div className="editorial-mark" aria-hidden="true">N</div>
-        <div className="editorial-copy">
-          <p className="eyebrow">La esencia NELA</p>
-          <h2>Un universo de<br /><em>detalles especiales</em></h2>
-          <p>
-            NELA reúne accesorios de plata ley 925 en una experiencia cálida, delicada y cercana. La historia oficial de la marca se incorporará aquí cuando esté disponible.
-          </p>
-          <Link href="/nosotros" className="text-link">Descubrir nuestra esencia</Link>
-        </div>
-        <div className="editorial-swatches" aria-label="Paleta NELA">
-          <span style={{ background: "#ECEAE8" }} />
-          <span style={{ background: "#D8C7CC" }} />
-          <span style={{ background: "#CBC8C5" }} />
-          <span style={{ background: "#8B6A4E" }} />
-        </div>
-      </section>
+      <BrandEssenceEditorial products={products} />
 
-      <section className="contact-invitation page-shell">
-        <p className="eyebrow">Estamos para acompañarte</p>
-        <h2>¿Necesitas ayuda para elegir?</h2>
-        <p>Estamos aquí para ayudarte a encontrar lo que buscas.</p>
-        <WhatsappButton label="Escríbenos por WhatsApp" />
+      <section className="contact-invitation" aria-labelledby="contact-invitation-title">
+        <div className="contact-invitation-grid page-shell">
+          <div className="contact-invitation-copy">
+            <p className="eyebrow">Estamos para acompañarte</p>
+            <h2 id="contact-invitation-title">¿Necesitas ayuda para elegir?</h2>
+            <p>Te ayudamos con tus dudas sobre productos, disponibilidad y pedidos.</p>
+          </div>
+          <div className="contact-invitation-action">
+            <WhatsappButton label="Escríbenos por WhatsApp" className="button contact-invitation-button" />
+            <p className="contact-invitation-note">
+              <MessageCircle size={22} strokeWidth={1.5} aria-hidden="true" />
+              Atención personalizada
+            </p>
+          </div>
+        </div>
       </section>
     </div>
   );

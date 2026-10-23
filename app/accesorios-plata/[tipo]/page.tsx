@@ -4,7 +4,6 @@ import { CategoryPage } from "@/components/categories/category-page";
 import { silverCollections, belongsToSilverCollection, getSilverCollection } from "@/config/silver-collections";
 import { categories } from "@/config/categories";
 import { getProductsByCategory } from "@/lib/products";
-import { getProductCarouselSlides } from "@/lib/products/carousel";
 
 type SilverCollectionPageProps = { params: Promise<{ tipo: string }> };
 
@@ -40,9 +39,10 @@ export default async function SilverCollectionPage({ params }: SilverCollectionP
         imageAlt: collection.imageAlt,
       }}
       products={products}
-      heroImages={getProductCarouselSlides(products, collection.heroImages)}
+      editorialHeroReference={collection.homeImageReference}
+      catalogContext={collection.slug}
       catalogTitle={`Explora ${collection.label.toLocaleLowerCase("es")}`}
-      catalogDescription="Filtra por precio, disponibilidad y características para encontrar la referencia indicada."
+      catalogDescription={collection.catalogDescription}
     />
   );
 }

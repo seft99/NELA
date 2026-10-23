@@ -3,71 +3,41 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronDown, Search } from "lucide-react";
-import { useEffect, useRef } from "react";
-import { mainNavigation, silverNavigationLinks } from "@/config/navigation";
+import { Search } from "lucide-react";
+import { primaryNavigation } from "@/config/navigation";
 import { MobileMenu } from "./mobile-menu";
 import { CartIcon } from "@/components/cart/cart-icon";
 
-export function Header() {
+export function Header({ productNavigation }: { productNavigation: Record<string, string> }) {
   const pathname = usePathname();
-  const catalogMenuRef = useRef<HTMLDetailsElement>(null);
-  const isCurrent = (href: string) => href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
-
-  useEffect(() => {
-    const closeMenu = (event: PointerEvent) => {
-      if (catalogMenuRef.current?.open && !catalogMenuRef.current.contains(event.target as Node)) {
-        catalogMenuRef.current.removeAttribute("open");
-      }
-    };
-    document.addEventListener("pointerdown", closeMenu);
-    return () => document.removeEventListener("pointerdown", closeMenu);
-  }, []);
+  const productSlug = pathname.startsWith("/productos/")
+    ? decodeURIComponent(pathname.slice("/productos/".length).split("/")[0] ?? "")
+    : "";
+  const activeProductCollection = productSlug ? productNavigation[productSlug] : undefined;
+  const isCurrent = (href: string) => (
+    href === activeProductCollection || pathname === href || pathname.startsWith(`${href}/`)
+  );
 
   return (
     <header className="site-header">
       <div className="header-inner">
-        <MobileMenu />
-        <Link href="/" className="brand-lockup" aria-label="NELA Joyería, inicio">
+        <MobileMenu productNavigation={productNavigation} />
+        <Link
+          href="/"
+          className="brand-lockup"
+          aria-label="NELA Joyería, inicio"
+        >
           <Image
-            src="/images/branding/nela-logo-transparent.png"
+            src="/images/branding/nela-wordmark.png"
             alt="NELA Joyería"
-            width={78}
-            height={78}
+            width={2172}
+            height={724}
+            sizes="(max-width: 1100px) 132px, 180px"
             priority
           />
         </Link>
         <nav className="desktop-nav" aria-label="Navegación principal">
-          {mainNavigation.map((item) => item.href === "/accesorios-plata" ? (
-            <details
-              ref={catalogMenuRef}
-              className={`desktop-catalog-menu${isCurrent(item.href) ? " is-active" : ""}`}
-              key={item.href}
-              onKeyDown={(event) => {
-                if (event.key === "Escape") {
-                  catalogMenuRef.current?.removeAttribute("open");
-                  catalogMenuRef.current?.querySelector("summary")?.focus();
-                }
-              }}
-            >
-              <summary>
-                {item.label} <ChevronDown size={14} aria-hidden="true" />
-              </summary>
-              <div className="desktop-catalog-panel">
-                {silverNavigationLinks.map((link, index) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className={pathname === link.href ? "is-current" : undefined}
-                    onClick={() => catalogMenuRef.current?.removeAttribute("open")}
-                  >
-                    {index === 0 ? <span>Todos</span> : <span>{String(index).padStart(2, "0")}</span>}
-                    <strong>{link.label}</strong>
-                  </Link>
-                ))}
-              </div>
-            </details>
-          ) : (
+          {primaryNavigation.map((item) => (
             <Link
               key={item.href}
               href={item.href}

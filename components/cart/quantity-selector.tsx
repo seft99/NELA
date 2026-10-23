@@ -8,15 +8,22 @@ export function QuantitySelector({
   label = "Cantidad",
   disabled = false,
   max,
+  busy = false,
 }: {
   quantity: number;
   onChange: (quantity: number) => void;
   label?: string;
   disabled?: boolean;
   max?: number;
+  busy?: boolean;
 }) {
   return (
-    <div className="quantity-selector" role="group" aria-label={label}>
+    <div
+      className={`quantity-selector${busy ? " is-validating" : ""}`}
+      role="group"
+      aria-label={label}
+      aria-busy={busy}
+    >
       <button
         type="button"
         onClick={() => onChange(Math.max(1, quantity - 1))}
@@ -25,7 +32,9 @@ export function QuantitySelector({
       >
         <Minus size={15} aria-hidden="true" />
       </button>
-      <output aria-live="polite" aria-label={`${label}: ${quantity}`}>{quantity}</output>
+      <output aria-live="polite" aria-label={`${label}: ${quantity}`}>
+        <span key={quantity}>{quantity}</span>
+      </output>
       <button
         type="button"
         onClick={() => onChange(quantity + 1)}

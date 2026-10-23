@@ -1,9 +1,16 @@
 import Link from "next/link";
 
-export function WhatsappPrivacyNotice({ className = "" }: { className?: string }) {
+export function WhatsappPrivacyNotice({
+  className = "",
+  legalOnly = false,
+}: {
+  className?: string;
+  legalOnly?: boolean;
+}) {
   return (
     <p className={`whatsapp-privacy-note ${className}`.trim()}>
-      Las compras se coordinan por WhatsApp. Consulta cómo tratamos tus datos en nuestra <Link href="/politica-de-privacidad">política de privacidad</Link>.
+      {legalOnly ? "Consulta cómo tratamos tus datos en nuestra " : "Las compras se coordinan por WhatsApp. Consulta cómo tratamos tus datos en nuestra "}
+      <Link href="/politica-de-privacidad">política de privacidad</Link>.
     </p>
   );
 }

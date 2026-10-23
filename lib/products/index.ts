@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { derivePublicAvailability } from "@/lib/products/inventory";
+import { normalizePublicProductCopy } from "@/lib/products/public-copy";
 import type { CategorySlug, Product } from "@/types/product";
 
 const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID;
@@ -117,5 +118,5 @@ function toPublicProduct(product: Product): Product {
   const publicProduct = { ...withAvailability };
   delete publicProduct.stock;
   delete publicProduct.variantInventory;
-  return publicProduct;
+  return normalizePublicProductCopy(publicProduct);
 }

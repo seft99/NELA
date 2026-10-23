@@ -16,6 +16,8 @@ try {
   const catalog = await server.ssrLoadModule("/data/demo-products.ts");
   const productRepository = await server.ssrLoadModule("/lib/products/index.ts");
   const publicDetails = await server.ssrLoadModule("/lib/products/public-details.ts");
+  const publicCopy = await server.ssrLoadModule("/lib/products/public-copy.ts");
+  const displayDetails = await server.ssrLoadModule("/lib/products/display-details.ts");
   const catalogFilters = await server.ssrLoadModule("/lib/products/catalog-filters.ts");
   const explorerConfig = await server.ssrLoadModule("/config/catalog-explorer.ts");
   const silverCollectionConfig = await server.ssrLoadModule("/config/silver-collections.ts");
@@ -77,6 +79,24 @@ try {
     }).map(({ label, value }) => `${label}: ${value}`),
     ["Material: Plata ley 925", "Color o acabado: Pulido", "Medidas: 45 cm"],
   );
+  assert.equal(
+    publicCopy.clarifyGreenZirconCopy("Piedra Verde, una piedra verde, la piedra verde y piedras verdes"),
+    "Circón Verde, un circón verde, el circón verde y circones verdes",
+  );
+  assert.equal(
+    publicCopy.clarifyGreenZirconCopy("Piedras verdes como detalle principal, rodeadas por elementos claros"),
+    "Circones verdes como detalle principal, rodeados por elementos claros",
+  );
+  assert.equal(
+    displayDetails.getProductDisplayDetails({
+      category: "accesorios-plata",
+      name: "Espiral Aurora con Circón Verde",
+      shortDescription: "Anillo con un circón verde.",
+      description: "Anillo con un circón verde.",
+      catalogAttributes: { jewelryType: "anillo", hasStone: true },
+    }).find((detail) => detail.key === "hasStone")?.value,
+    "Con circón verde",
+  );
 
   const filterFixtures = [
     {
@@ -117,6 +137,12 @@ try {
   assert.deepEqual(options.ringSizes, ["6", "7"]);
   assert.deepEqual(options.lengths, ["45 cm"]);
   assert.equal(options.hasAvailabilityDifference, true);
+  assert.equal(
+    catalogFilters.filterCatalogProducts(filterFixtures, catalogFilters.emptyCatalogFilters)
+      .some((product) => product.id === "filter-pendant-man"),
+    true,
+    "Los productos visibles sin stock deben permanecer en el catálogo.",
+  );
   assert.equal(catalogFilters.jewelryFilterLabels.arete, "Aretes y topos");
   assert.deepEqual(explorerConfig.catalogExplorerConfigs.anillos.sortOptions, ["default", "price-asc", "price-desc", "name-asc", "name-desc"]);
   assert.equal(explorerConfig.catalogExplorerConfigs["aretes-y-topos"].earringType, true);

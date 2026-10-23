@@ -21,6 +21,9 @@ export function getProductDisplayDetails(product: Product): ProductDisplayDetail
           : "detail" as const,
   }));
   const attributes = product.category === "accesorios-plata" ? product.catalogAttributes : undefined;
+  const mentionsGreenZircon = /(?:circón verde|circones verdes)/i.test(
+    `${product.name} ${product.shortDescription} ${product.description}`,
+  );
   const catalogDetails: Array<ProductDisplayDetail | null> = [
     attributes?.ringSizes?.length
       ? {
@@ -48,7 +51,12 @@ export function getProductDisplayDetails(product: Product): ProductDisplayDetail
       ? { key: "stone", label: "Piedra", value: attributes.stone.trim(), kind: "detail" }
       : null,
     attributes?.hasStone === true && !attributes.stone?.trim()
-      ? { key: "hasStone", label: "Detalle", value: "Con piedra", kind: "detail" }
+      ? {
+          key: "hasStone",
+          label: "Detalle",
+          value: mentionsGreenZircon ? "Con circón verde" : "Con piedra",
+          kind: "detail",
+        }
       : null,
   ];
 

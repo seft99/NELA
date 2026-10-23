@@ -1,19 +1,19 @@
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { AddToCartButton } from "@/components/cart/add-to-cart-button";
-import { BuyNowButton } from "@/components/cart/buy-now-button";
-import { formatCOP } from "@/config/site";
-import { getProductAvailability } from "@/lib/products/inventory";
+import { FavoriteProductCard } from "@/components/home/favorite-product-card";
+import { FavoritesMobileCarousel } from "@/components/home/favorites-mobile-carousel";
 import type { JewelryType, Product } from "@/types/product";
-
-type EditorialCardSize = "lead" | "wide" | "compact";
 
 const jewelryTypeIs = (product: Product, types: JewelryType[]) => (
   product.catalogAttributes?.jewelryType
     ? types.includes(product.catalogAttributes.jewelryType)
     : false
 );
+
+const normalizedName = (product: Product) => product.name
+  .normalize("NFD")
+  .replace(/[\u0300-\u036f]/g, "")
+  .toLocaleLowerCase("es");
 
 function selectEditorialProducts(products: Product[]) {
   const candidates = products.filter((product) => Boolean(product.images[0]?.src));
@@ -28,68 +28,37 @@ function selectEditorialProducts(products: Product[]) {
     return product;
   };
 
-  const lead = take((product) => jewelryTypeIs(product, ["cadena", "collar"]));
-  const wide = take((product) => jewelryTypeIs(product, ["arete", "topo", "argolla", "ear-cuff"]));
-  const firstCompact = take((product) => jewelryTypeIs(product, ["dije"]));
-  const secondCompact = take((product) => jewelryTypeIs(product, ["pulsera", "pulso"]));
+  const lead = take((product) => normalizedName(product) === "lazo")
+    ?? take((product) => jewelryTypeIs(product, ["cadena", "collar"]));
+  const wide = take((product) => normalizedName(product).includes("entrelazada"))
+    ?? take((product) => jewelryTypeIs(product, ["arete", "topo", "argolla", "ear-cuff"]));
+  const firstCompact = take((product) => {
+    const name = normalizedName(product);
+    return name.includes("virgen milagrosa") && name.includes("piedras blancas");
+  }) ?? take((product) => normalizedName(product).includes("virgen milagrosa"))
+    ?? take((product) => jewelryTypeIs(product, ["dije"]));
+  const secondCompact = take((product) => normalizedName(product).includes("flor aurora rosada"))
+    ?? take((product) => jewelryTypeIs(product, ["pulsera", "pulso"]));
 
   const selected = [lead, wide, firstCompact, secondCompact];
   for (let index = 0; index < selected.length; index += 1) {
     if (!selected[index]) selected[index] = take();
   }
 
-  return selected as Array<Product | undefined>;
-}
+  const editorialProducts = selected.filter((product): product is Product => Boolean(product));
+  const additionalProducts = candidates.filter((product) => !usedIds.has(product.id));
 
-function EditorialProductCard({
-  product,
-  size,
-}: {
-  product: Product;
-  size: EditorialCardSize;
-}) {
-  const image = product.images[0];
-  const availability = getProductAvailability(product);
-  const sizes = size === "lead"
-    ? "(max-width: 680px) calc(100vw - 32px), (max-width: 1080px) 56vw, 34vw"
-    : size === "wide"
-      ? "(max-width: 680px) calc(100vw - 32px), (max-width: 1080px) 44vw, 35vw"
-      : "(max-width: 680px) calc(50vw - 22px), (max-width: 1080px) 22vw, 17vw";
-
-  return (
-    <article className={`favorite-product-card favorite-product-card--${size}`}>
-      <Link
-        href={`/productos/${product.slug}`}
-        className="favorite-product-media"
-        aria-label={`Ver detalles de ${product.name}`}
-      >
-        {!availability.available ? (
-          <span className="unavailable-badge">{availability.label}</span>
-        ) : null}
-        <Image
-          src={image.src}
-          alt={image.alt || `Vista de ${product.name}`}
-          fill
-          sizes={sizes}
-          className="favorite-product-image"
-        />
-      </Link>
-
-      <div className="favorite-product-copy">
-        <h3><Link href={`/productos/${product.slug}`}>{product.name}</Link></h3>
-        <p>{formatCOP(product.price)}</p>
-      </div>
-
-      <div className="favorite-product-actions" aria-label={`Opciones de compra para ${product.name}`}>
-        <BuyNowButton product={product} placement="card" compact={size === "compact"} />
-        <AddToCartButton product={product} compact={size === "compact"} />
-      </div>
-    </article>
-  );
+  return {
+    lead: editorialProducts[0],
+    wide: editorialProducts[1],
+    firstCompact: editorialProducts[2],
+    secondCompact: editorialProducts[3],
+    mobileProducts: [...editorialProducts.slice(1), ...additionalProducts],
+  };
 }
 
 export function FavoritesEditorial({ products }: { products: Product[] }) {
-  const [lead, wide, firstCompact, secondCompact] = selectEditorialProducts(products);
+  const { lead, wide, firstCompact, secondCompact, mobileProducts } = selectEditorialProducts(products);
 
   if (!lead) return null;
 
@@ -110,15 +79,17 @@ export function FavoritesEditorial({ products }: { products: Product[] }) {
           </Link>
         </header>
 
-        <EditorialProductCard product={lead} size="lead" />
+        <FavoriteProductCard product={lead} size="lead" />
 
         <div className="favorites-editorial-support">
-          {wide ? <EditorialProductCard product={wide} size="wide" /> : null}
+          {wide ? <FavoriteProductCard product={wide} size="wide" /> : null}
           <div className="favorites-editorial-pair">
-            {firstCompact ? <EditorialProductCard product={firstCompact} size="compact" /> : null}
-            {secondCompact ? <EditorialProductCard product={secondCompact} size="compact" /> : null}
+            {firstCompact ? <FavoriteProductCard product={firstCompact} size="compact" /> : null}
+            {secondCompact ? <FavoriteProductCard product={secondCompact} size="compact" /> : null}
           </div>
         </div>
+
+        <FavoritesMobileCarousel products={mobileProducts} />
       </div>
     </section>
   );

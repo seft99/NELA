@@ -27,6 +27,12 @@ export const defaultStoreCarouselSlides = [
     captionTone: "dark",
   },
   {
+    src: "/images/store/pulsera-floral-verde.png",
+    alt: "Pulsera de plata ley 925 con detalles florales y circones verdes",
+    position: "50% 50%",
+    captionTone: "dark",
+  },
+  {
     src: "/images/store/argollas-entrelazadas.png",
     alt: "Argollas de plata ley 925 entrelazadas sobre fondo neutro",
     position: "50% 50%",
@@ -36,12 +42,6 @@ export const defaultStoreCarouselSlides = [
     src: "/images/store/dije-floral.png",
     alt: "Dije floral de plata ley 925 con piedras blancas sobre fondo neutro",
     position: "50% 52%",
-    captionTone: "dark",
-  },
-  {
-    src: "/images/store/pulsera-floral-verde.png",
-    alt: "Pulsera de plata ley 925 con detalles florales y piedras verdes",
-    position: "50% 50%",
     captionTone: "dark",
   },
 ] as const satisfies readonly StoreCarouselSlide[];

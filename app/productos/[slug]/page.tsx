@@ -46,15 +46,21 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const silverCollection = product.category === "accesorios-plata"
     ? getSilverCollectionForJewelryType(product.catalogAttributes?.jewelryType)
     : undefined;
+  const relatedSlugs = new Set<string>();
   const related = (await getProductsByCategory(product.category))
     .filter((item) => item.slug !== product.slug)
     .filter((item) => !silverCollection || belongsToSilverCollection(item, silverCollection))
+    .filter((item) => {
+      if (relatedSlugs.has(item.slug)) return false;
+      relatedSlugs.add(item.slug);
+      return true;
+    })
     .sort((a, b) => (
       Number(b.available) - Number(a.available) ||
       a.displayOrder - b.displayOrder ||
       a.name.localeCompare(b.name, "es")
     ))
-    .slice(0, 4);
+    .slice(0, 3);
   const availability = getProductAvailability(product);
   const categoryLabel = silverCollection?.label ?? category.name;
   const categoryHref = silverCollection ? `/accesorios-plata/${silverCollection.slug}` : `/${category.slug}`;
@@ -104,7 +110,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             <span>{categoryLabel}</span>
             <b aria-hidden="true" />
           </p>
-          <h1>{product.name}</h1>
+          <h1 className={product.name.length > 28 ? "product-detail-title--long" : undefined}>{product.name}</h1>
           <p className="product-price">{formatCOP(product.price)}</p>
           <div className="product-meta-row">
             {product.reference ? <span>Ref. {product.reference}</span> : null}
@@ -120,7 +126,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
       </section>
       <section className={`page-shell product-detail-lower${related.length ? "" : " product-detail-lower--single"}`}>
         <ProductDetailTabs product={product} />
-        <ProductRecommendations products={related} />
+        <ProductRecommendations products={related} categoryLabel={categoryLabel} categoryHref={categoryHref} />
       </section>
     </div>
   );

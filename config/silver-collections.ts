@@ -71,9 +71,9 @@ export const silverCollections = [
     description: "Pulseras de plata ley 925 para sumar un detalle sutil y luminoso a cada momento.",
     catalogDescription: "Descubre pulseras para acompañar cada momento.",
     image: "/images/store/pulsera-floral-verde.png",
-    imageAlt: "Pulsera de plata ley 925 con detalles florales y piedras verdes",
+    imageAlt: "Pulsera de plata ley 925 con detalles florales y circones verdes",
     heroImages: [
-      { src: "/images/store/pulsera-floral-verde.png", alt: "Pulsera floral de plata ley 925 con piedras verdes" },
+      { src: "/images/store/pulsera-floral-verde.png", alt: "Pulsera floral de plata ley 925 con circones verdes" },
       { src: "/images/store/pulsera-floral-rosada.png", alt: "Pulsera Flor Aurora de plata ley 925 con piedras rosadas" },
     ],
     homeImageReference: "NELA-PU-001",

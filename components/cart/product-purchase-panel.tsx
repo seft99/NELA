@@ -1,7 +1,7 @@
 "use client";
 
-import { Check, ShoppingBag } from "lucide-react";
-import { useMemo, useState } from "react";
+import { AlertCircle, Check, ShoppingBag } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { BuyNowButton } from "@/components/cart/buy-now-button";
 import { QuantitySelector } from "@/components/cart/quantity-selector";
 import { WhatsappPrivacyNotice } from "@/components/privacy/whatsapp-privacy-notice";
@@ -16,6 +16,9 @@ export function ProductPurchasePanel({ product }: { product: Product }) {
   const [quantity, setQuantity] = useState(1);
   const [selections, setSelections] = useState<VariantSelections>({});
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [isValidatingQuantity, setIsValidatingQuantity] = useState(false);
+  const lastConfirmedQuantity = useRef(1);
+  const quantityValidationRun = useRef(0);
 
   const selectedVariants = useMemo<SelectedVariant[]>(() => (product.variants ?? []).flatMap((variant) => {
     const optionId = selections[variant.id];
@@ -33,29 +36,80 @@ export function ProductPurchasePanel({ product }: { product: Product }) {
     ? (selectedVariants.length ? getAvailableStock(product, selectedVariants) : undefined)
     : product.stock;
 
-  const handleQuantityChange = async (nextQuantity: number) => {
-    if (nextQuantity <= quantity) {
-      setQuantity(Math.max(1, nextQuantity));
-      setFeedback(null);
+  useEffect(() => {
+    if (quantity <= lastConfirmedQuantity.current) {
+      setIsValidatingQuantity(false);
       return;
     }
+
+    const runId = ++quantityValidationRun.current;
+    setIsValidatingQuantity(true);
+    const timer = window.setTimeout(async () => {
+      const validateQuantity = async (candidate: number) => validateInventoryLines([
+        productInventoryLine(product, candidate, selectedVariants),
+      ]);
+
+      try {
+        const validation = await validateQuantity(quantity);
+        if (runId !== quantityValidationRun.current) return;
+
+        if (validation.valid) {
+          lastConfirmedQuantity.current = quantity;
+          return;
+        }
+
+        // If several fast clicks crossed the stock limit, keep the highest
+        // quantity that the inventory service still confirms instead of
+        // forcing the customer all the way back to one unit.
+        let validQuantity = lastConfirmedQuantity.current;
+        let lowerBound = validQuantity + 1;
+        let upperBound = quantity - 1;
+        while (lowerBound <= upperBound) {
+          const candidate = Math.ceil((lowerBound + upperBound) / 2);
+          const candidateValidation = await validateQuantity(candidate);
+          if (runId !== quantityValidationRun.current) return;
+          if (candidateValidation.valid) {
+            validQuantity = candidate;
+            lowerBound = candidate + 1;
+          } else {
+            upperBound = candidate - 1;
+          }
+        }
+
+        lastConfirmedQuantity.current = validQuantity;
+        setQuantity(validQuantity);
+        setFeedback({
+          type: "error",
+          message: validation.issues[0]?.message ?? "No hay más unidades disponibles.",
+        });
+      } catch (error) {
+        if (runId !== quantityValidationRun.current) return;
+        setQuantity(lastConfirmedQuantity.current);
+        setFeedback({
+          type: "error",
+          message: error instanceof Error ? error.message : "No fue posible confirmar las existencias.",
+        });
+      } finally {
+        if (runId === quantityValidationRun.current) setIsValidatingQuantity(false);
+      }
+    }, 180);
+
+    return () => {
+      window.clearTimeout(timer);
+      if (runId === quantityValidationRun.current) quantityValidationRun.current += 1;
+    };
+  }, [product, quantity, selectedVariants]);
+
+  const handleQuantityChange = (nextQuantity: number) => {
+    const safeQuantity = Math.max(1, nextQuantity);
     const selectionError = (product.variants ?? []).find((variant) => variant.required && !selections[variant.id]);
-    if (selectionError) {
+    if (safeQuantity > quantity && selectionError) {
       setFeedback({ type: "error", message: `Selecciona ${selectionError.name.toLocaleLowerCase("es")} antes de aumentar la cantidad.` });
       return;
     }
-    try {
-      const validation = await validateInventoryLines([
-        productInventoryLine(product, nextQuantity, selectedVariants),
-      ]);
-      if (!validation.valid) {
-        setFeedback({ type: "error", message: validation.issues[0]?.message ?? "No hay más unidades disponibles." });
-        return;
-      }
-      setQuantity(nextQuantity);
+    setQuantity(safeQuantity);
+    if (safeQuantity <= lastConfirmedQuantity.current) {
       setFeedback(null);
-    } catch (error) {
-      setFeedback({ type: "error", message: error instanceof Error ? error.message : "No fue posible confirmar las existencias." });
     }
   };
 
@@ -96,6 +150,10 @@ export function ProductPurchasePanel({ product }: { product: Product }) {
             value={selections[variant.id] ?? ""}
             required={variant.required}
             onChange={(event) => {
+              quantityValidationRun.current += 1;
+              lastConfirmedQuantity.current = 1;
+              setQuantity(1);
+              setIsValidatingQuantity(false);
               setSelections((current) => ({ ...current, [variant.id]: event.target.value }));
               setFeedback(null);
             }}
@@ -111,10 +169,11 @@ export function ProductPurchasePanel({ product }: { product: Product }) {
         <span>Cantidad</span>
         <QuantitySelector
           quantity={quantity}
-          onChange={(nextQuantity) => void handleQuantityChange(nextQuantity)}
+          onChange={handleQuantityChange}
           label={`Cantidad de ${product.name}`}
           max={selectedStock ?? undefined}
           disabled={selectedStock === 0}
+          busy={isValidatingQuantity}
         />
       </div>
       <div className="purchase-actions">
@@ -130,16 +189,23 @@ export function ProductPurchasePanel({ product }: { product: Product }) {
         />
       </div>
       <p className="purchase-process-note">Compra coordinada por WhatsApp. Te confirmaremos disponibilidad y detalles de tu pedido.</p>
-      <WhatsappPrivacyNotice className="purchase-privacy-note" />
-      {feedback ? (
-        <div className={`purchase-feedback ${feedback.type}`} role="status">
-          {feedback.type === "success" ? <Check size={16} aria-hidden="true" /> : null}
-          <span>{feedback.message}</span>
-          {feedback.type === "success" ? (
-            <button type="button" onClick={openCart}>Ver carrito</button>
-          ) : null}
-        </div>
-      ) : null}
+      <WhatsappPrivacyNotice className="purchase-privacy-note" legalOnly />
+      <div className="purchase-feedback-region">
+        {feedback ? (
+          <div
+            className={`purchase-feedback ${feedback.type}`}
+            role={feedback.type === "error" ? "alert" : "status"}
+          >
+            {feedback.type === "success"
+              ? <Check size={16} aria-hidden="true" />
+              : <AlertCircle size={16} aria-hidden="true" />}
+            <span>{feedback.message}</span>
+            {feedback.type === "success" ? (
+              <button type="button" onClick={openCart}>Ver carrito</button>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }

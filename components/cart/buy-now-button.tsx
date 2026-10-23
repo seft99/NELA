@@ -43,7 +43,7 @@ export function BuyNowButton({
   if (!isProductPurchasable(product)) {
     return (
       <button className={className} type="button" disabled aria-label={`Comprar ${product.name}`}>
-        {compact ? "No disponible" : "Comprar ahora"}
+        No disponible
       </button>
     );
   }

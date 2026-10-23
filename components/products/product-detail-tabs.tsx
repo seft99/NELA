@@ -24,18 +24,7 @@ export function ProductDetailTabs({ product }: { product: Product }) {
       label: "Descripción y detalles",
       content: (
         <div className="product-tab-copy">
-          {expandedDescription ? <p>{expandedDescription}</p> : null}
-          {details.length ? (
-            <dl className="product-tab-details">
-              {details.map((detail) => (
-                <div key={detail.key}>
-                  <dt>{detail.label}</dt>
-                  <dd>{detail.value}</dd>
-                </div>
-              ))}
-            </dl>
-          ) : null}
-          {!expandedDescription && !details.length ? <p>No hay información ampliada disponible para esta referencia.</p> : null}
+          <p>{expandedDescription || product.shortDescription.trim()}</p>
         </div>
       ),
     },
@@ -88,7 +77,7 @@ export function ProductDetailTabs({ product }: { product: Product }) {
 
   return (
     <section className="product-detail-tabs" aria-label="Información ampliada del producto">
-      <div className="product-tabs-list" role="tablist" aria-label="Información del producto">
+      <div className="product-tabs-list" role="tablist" aria-label="Información del producto" aria-orientation="horizontal">
         {tabs.map((tab, index) => (
           <button
             id={`${baseId}-tab-${tab.id}`}

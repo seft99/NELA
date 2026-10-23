@@ -25,7 +25,7 @@ export function AddToCartButton({
   if (!isProductPurchasable(product)) {
     return (
       <button className={className} type="button" disabled aria-label={`Agregar ${product.name} al carrito`}>
-        {compact ? "No disponible" : "Agregar al carrito"}
+        No disponible
       </button>
     );
   }

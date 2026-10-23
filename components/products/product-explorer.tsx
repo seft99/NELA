@@ -262,10 +262,20 @@ export function ProductExplorer({
             </label>
           ) : null}
           {showAvailability ? (
-            <label className="availability-control">
-              <input type="checkbox" checked={filters.availableOnly} onChange={(event) => setFilters((current) => ({ ...current, availableOnly: event.target.checked }))} />
-              Solo disponibles
-            </label>
+            <div className="availability-control">
+              <span className="availability-label">Disponibilidad</span>
+              <label className={`availability-option${filters.availableOnly ? " is-active" : ""}`}>
+                <input
+                  type="checkbox"
+                  checked={filters.availableOnly}
+                  onChange={(event) => setFilters((current) => ({ ...current, availableOnly: event.target.checked }))}
+                />
+                <span className="availability-check" aria-hidden="true">
+                  <Check size={13} strokeWidth={2.25} />
+                </span>
+                <span>Solo disponibles</span>
+              </label>
+            </div>
           ) : null}
           {showSort ? (
             <div className="sort-control">

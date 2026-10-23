@@ -1,16 +1,30 @@
 import Image from "next/image";
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { formatCOP } from "@/config/site";
 import type { Product } from "@/types/product";
 
-export function ProductRecommendations({ products }: { products: Product[] }) {
+export function ProductRecommendations({
+  products,
+  categoryLabel,
+  categoryHref,
+}: {
+  products: Product[];
+  categoryLabel: string;
+  categoryHref: string;
+}) {
   if (!products.length) return null;
 
   return (
     <section className="product-recommendations" aria-labelledby="product-recommendations-title">
       <div className="product-recommendations-heading">
-        <p className="eyebrow">Continúa explorando</p>
-        <h2 id="product-recommendations-title">También te pueden gustar</h2>
+        <div>
+          <p className="eyebrow">Continúa explorando</p>
+          <h2 id="product-recommendations-title">También te pueden gustar</h2>
+        </div>
+        <Link className="product-recommendations-more" href={categoryHref}>
+          Ver más {categoryLabel} <ArrowRight size={15} aria-hidden="true" />
+        </Link>
       </div>
       <div className="product-recommendations-grid">
         {products.map((product) => {

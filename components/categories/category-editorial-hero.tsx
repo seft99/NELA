@@ -6,6 +6,7 @@ type CategoryEditorialHeroProps = {
   category: Category;
   products: readonly Product[];
   preferredProductReference?: string;
+  mobileDescription?: string;
 };
 
 function getRepresentativeProduct(
@@ -25,6 +26,7 @@ export function CategoryEditorialHero({
   category,
   products,
   preferredProductReference,
+  mobileDescription,
 }: CategoryEditorialHeroProps) {
   const representativeProduct = getRepresentativeProduct(products, preferredProductReference);
   const representativeImage = representativeProduct?.images.find((image) => image.src);
@@ -55,7 +57,12 @@ export function CategoryEditorialHero({
               <i aria-hidden="true" />
             </div>
             <h1 id="category-title">{category.name}</h1>
-            <p className="category-editorial-description">{category.description}</p>
+            <p className="category-editorial-description">
+              <span className="category-editorial-description-desktop">{category.description}</span>
+              <span className="category-editorial-description-mobile">
+                {mobileDescription ?? category.description}
+              </span>
+            </p>
             <p className="category-reference-count">
               {products.length} {referenceLabel}
             </p>

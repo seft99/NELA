@@ -59,6 +59,76 @@ function normalizeSort(value: string | null): CatalogSort {
   return "default";
 }
 
+const catalogPriceFormatter = new Intl.NumberFormat("es-CO", {
+  maximumFractionDigits: 0,
+  useGrouping: true,
+});
+
+function normalizePriceDraft(value: string) {
+  return value.replace(/\D/g, "").replace(/^0+(?=\d)/, "");
+}
+
+function formatPriceDraft(value: string) {
+  if (!value) return "";
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) ? catalogPriceFormatter.format(numericValue) : "";
+}
+
+function caretPositionAfterDigits(value: string, digitCount: number) {
+  if (digitCount <= 0) return 0;
+  let seenDigits = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    if (/\d/.test(value[index])) seenDigits += 1;
+    if (seenDigits === digitCount) return index + 1;
+  }
+  return value.length;
+}
+
+function FormattedCatalogPriceInput({
+  id,
+  label,
+  value,
+  placeholder,
+  describedBy,
+  onValueChange,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  placeholder: number;
+  describedBy: string;
+  onValueChange: (value: string) => void;
+}) {
+  return (
+    <label className="catalog-price-input catalog-price-input--desktop" htmlFor={id}>
+      <span className="sr-only">{label}</span>
+      <span className="price-money-input">
+        <span aria-hidden="true">$</span>
+        <input
+          id={id}
+          type="text"
+          inputMode="numeric"
+          autoComplete="off"
+          value={formatPriceDraft(value)}
+          placeholder={catalogPriceFormatter.format(placeholder)}
+          aria-describedby={describedBy}
+          onChange={(event) => {
+            const input = event.currentTarget;
+            const selectionStart = input.selectionStart ?? input.value.length;
+            const digitsBeforeCaret = input.value.slice(0, selectionStart).replace(/\D/g, "").length;
+            const nextValue = normalizePriceDraft(input.value);
+            onValueChange(nextValue);
+            window.requestAnimationFrame(() => {
+              const nextCaret = caretPositionAfterDigits(formatPriceDraft(nextValue), digitsBeforeCaret);
+              input.setSelectionRange(nextCaret, nextCaret);
+            });
+          }}
+        />
+      </span>
+    </label>
+  );
+}
+
 export function ProductExplorer({
   products,
   context = "all",
@@ -338,14 +408,34 @@ export function ProductExplorer({
                 <span className="catalog-filter-label">Precio</span>
                 <p id="price-limits" className="sr-only">Límites: {formatCOP(options.minPrice)} a {formatCOP(options.maxPrice)} COP</p>
                 <div className="price-custom-row">
-                  <label htmlFor="catalog-price-min">
-                    <span className="sr-only">Precio mínimo</span>
-                    <span className="price-money-input"><span aria-hidden="true">$</span><input id="catalog-price-min" type="number" inputMode="numeric" min={options.minPrice} max={options.maxPrice} step="1000" value={priceDraft.min} placeholder={String(options.minPrice)} aria-describedby={`price-limits${priceDraftError ? " price-error" : ""}`} onChange={(event) => setPriceDraft((current) => ({ ...current, min: event.target.value }))} /></span>
-                  </label>
-                  <label htmlFor="catalog-price-max">
-                    <span className="sr-only">Precio máximo</span>
-                    <span className="price-money-input"><span aria-hidden="true">$</span><input id="catalog-price-max" type="number" inputMode="numeric" min={options.minPrice} max={options.maxPrice} step="1000" value={priceDraft.max} placeholder={String(options.maxPrice)} aria-describedby={`price-limits${priceDraftError ? " price-error" : ""}`} onChange={(event) => setPriceDraft((current) => ({ ...current, max: event.target.value }))} /></span>
-                  </label>
+                  <div className="catalog-price-field">
+                    <FormattedCatalogPriceInput
+                      id="catalog-price-min"
+                      label="Precio mínimo"
+                      value={priceDraft.min}
+                      placeholder={options.minPrice}
+                      describedBy={`price-limits${priceDraftError ? " price-error" : ""}`}
+                      onValueChange={(value) => setPriceDraft((current) => ({ ...current, min: value }))}
+                    />
+                    <label className="catalog-price-input catalog-price-input--mobile" htmlFor="catalog-price-min-mobile">
+                      <span className="sr-only">Precio mínimo</span>
+                      <span className="price-money-input"><span aria-hidden="true">$</span><input id="catalog-price-min-mobile" type="number" inputMode="numeric" min={options.minPrice} max={options.maxPrice} step="1000" value={priceDraft.min} placeholder={String(options.minPrice)} aria-describedby={`price-limits${priceDraftError ? " price-error" : ""}`} onChange={(event) => setPriceDraft((current) => ({ ...current, min: event.target.value }))} /></span>
+                    </label>
+                  </div>
+                  <div className="catalog-price-field">
+                    <FormattedCatalogPriceInput
+                      id="catalog-price-max"
+                      label="Precio máximo"
+                      value={priceDraft.max}
+                      placeholder={options.maxPrice}
+                      describedBy={`price-limits${priceDraftError ? " price-error" : ""}`}
+                      onValueChange={(value) => setPriceDraft((current) => ({ ...current, max: value }))}
+                    />
+                    <label className="catalog-price-input catalog-price-input--mobile" htmlFor="catalog-price-max-mobile">
+                      <span className="sr-only">Precio máximo</span>
+                      <span className="price-money-input"><span aria-hidden="true">$</span><input id="catalog-price-max-mobile" type="number" inputMode="numeric" min={options.minPrice} max={options.maxPrice} step="1000" value={priceDraft.max} placeholder={String(options.maxPrice)} aria-describedby={`price-limits${priceDraftError ? " price-error" : ""}`} onChange={(event) => setPriceDraft((current) => ({ ...current, max: event.target.value }))} /></span>
+                    </label>
+                  </div>
                   <button type="button" className="price-apply" onClick={applyPriceDraft}>Filtrar</button>
                 </div>
                 {priceDraftError ? <p id="price-error" className="filter-error" role="alert">{priceDraftError}</p> : null}

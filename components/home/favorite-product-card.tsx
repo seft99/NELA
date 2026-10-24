@@ -1,7 +1,7 @@
 import Image from "next/image";
-import Link from "next/link";
 import { AddToCartButton } from "@/components/cart/add-to-cart-button";
 import { BuyNowButton } from "@/components/cart/buy-now-button";
+import { TopNavigationLink } from "@/components/navigation/top-navigation-link";
 import { formatCOP } from "@/config/site";
 import { getProductAvailability } from "@/lib/products/inventory";
 import type { Product } from "@/types/product";
@@ -28,7 +28,7 @@ export function FavoriteProductCard({
 
   return (
     <article className={`favorite-product-card favorite-product-card--${size}`}>
-      <Link
+      <TopNavigationLink
         href={`/productos/${product.slug}`}
         className="favorite-product-media"
         aria-label={`Ver detalles de ${product.name}`}
@@ -43,10 +43,10 @@ export function FavoriteProductCard({
           sizes={sizes}
           className="favorite-product-image"
         />
-      </Link>
+      </TopNavigationLink>
 
       <div className="favorite-product-copy">
-        <h3><Link href={`/productos/${product.slug}`}>{product.name}</Link></h3>
+        <h3><TopNavigationLink href={`/productos/${product.slug}`}>{product.name}</TopNavigationLink></h3>
         <p>{formatCOP(product.price)}</p>
       </div>
 

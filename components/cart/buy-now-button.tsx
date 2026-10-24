@@ -54,7 +54,12 @@ export function BuyNowButton({
 
   if (!isProductPurchasable(product)) {
     return (
-      <button className={className} type="button" disabled aria-label={`Comprar ${product.name}`}>
+      <button
+        className={className}
+        type="button"
+        disabled
+        aria-label={mobileCompact ? `Comprar por WhatsApp: ${product.name}` : `Comprar ${product.name}`}
+      >
         No disponible
       </button>
     );
@@ -62,7 +67,13 @@ export function BuyNowButton({
 
   if (needsProductOptions) {
     return (
-      <Link className={className} href={`/productos/${product.slug}`} aria-label={`Elegir opciones para comprar ${product.name}`}>
+      <Link
+        className={className}
+        href={`/productos/${product.slug}`}
+        aria-label={mobileCompact
+          ? `Comprar por WhatsApp: elegir opciones para ${product.name}`
+          : `Elegir opciones para comprar ${product.name}`}
+      >
         <MessageCircle size={15} aria-hidden="true" /> {cardLabel}
       </Link>
     );
@@ -105,7 +116,9 @@ export function BuyNowButton({
       onClick={handleClick}
       disabled={placement === "card" && !checkout.isNumberValid}
       title={!checkout.isNumberValid ? "WhatsApp aún no está configurado" : undefined}
-      aria-label={`Comprar ${product.name} ahora por WhatsApp`}
+      aria-label={mobileCompact
+        ? `Comprar por WhatsApp: ${product.name}`
+        : `Comprar ${product.name} ahora por WhatsApp`}
     >
       <MessageCircle size={placement === "card" ? 15 : 17} aria-hidden="true" /> {placement === "detail" ? "Comprar por WhatsApp" : cardLabel}
     </button>

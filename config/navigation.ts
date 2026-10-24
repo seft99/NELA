@@ -14,7 +14,6 @@ export const mainNavigation = [
   { href: "/nosotros", label: "Nosotros" },
   { href: "/contacto", label: "Contacto" },
   { href: "/preguntas-frecuentes", label: "Preguntas frecuentes" },
-  { href: "/politica-de-privacidad", label: "Privacidad" },
 ] as const;
 
 export const primaryNavigation = [

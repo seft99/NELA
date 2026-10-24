@@ -1,13 +1,13 @@
 "use client";
 
 import { ArrowUpRight, ChevronDown, Menu, MessageCircle, X } from "lucide-react";
-import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { mainNavigation, silverNavigationLinks } from "@/config/navigation";
 import { siteConfig } from "@/config/site";
 import { createWhatsappUrl } from "@/lib/whatsapp";
+import { TopNavigationLink } from "@/components/navigation/top-navigation-link";
 
 export function MobileMenu({ productNavigation }: { productNavigation: Record<string, string> }) {
   const [open, setOpen] = useState(false);
@@ -19,6 +19,7 @@ export function MobileMenu({ productNavigation }: { productNavigation: Record<st
   const panelRef = useRef<HTMLElement>(null);
   const closeTimerRef = useRef<number | null>(null);
   const openFrameRef = useRef<number | null>(null);
+  const navigatingRef = useRef(false);
   const pathname = usePathname();
   const productSlug = pathname.startsWith("/productos/")
     ? decodeURIComponent(pathname.slice("/productos/".length).split("/")[0] ?? "")
@@ -31,6 +32,7 @@ export function MobileMenu({ productNavigation }: { productNavigation: Record<st
 
   const openMenu = useCallback(() => {
     if (closeTimerRef.current !== null) window.clearTimeout(closeTimerRef.current);
+    navigatingRef.current = false;
     setRendered(true);
     setCatalogOpen(isCatalogCurrent);
     openFrameRef.current = window.requestAnimationFrame(() => {
@@ -45,6 +47,11 @@ export function MobileMenu({ productNavigation }: { productNavigation: Record<st
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     closeTimerRef.current = window.setTimeout(() => setRendered(false), reducedMotion ? 0 : 280);
   }, []);
+
+  const navigateAndClose = useCallback(() => {
+    navigatingRef.current = true;
+    closeMenu();
+  }, [closeMenu]);
 
   useEffect(() => () => {
     if (closeTimerRef.current !== null) window.clearTimeout(closeTimerRef.current);
@@ -89,7 +96,7 @@ export function MobileMenu({ productNavigation }: { productNavigation: Record<st
       body.style.overflow = previousBodyStyles.overflow;
       window.removeEventListener("resize", updateLayerTop);
       window.removeEventListener("orientationchange", updateLayerTop);
-      window.scrollTo(0, scrollY);
+      if (!navigatingRef.current) window.scrollTo(0, scrollY);
     };
   }, [closeMenu, rendered]);
 
@@ -193,31 +200,31 @@ export function MobileMenu({ productNavigation }: { productNavigation: Record<st
                   </summary>
                   <div className="mobile-catalog-links" id="mobile-catalog-links">
                     {silverNavigationLinks.map((link) => (
-                      <Link
+                      <TopNavigationLink
                         key={link.href}
                         href={link.href}
                         className={isCatalogLinkCurrent(link.href) ? "is-active" : undefined}
                         aria-current={isCatalogLinkCurrent(link.href) ? "page" : undefined}
-                        onClick={closeMenu}
+                        onClick={navigateAndClose}
                       >
                         {link.label} <ArrowUpRight size={15} aria-hidden="true" />
-                      </Link>
+                      </TopNavigationLink>
                     ))}
                   </div>
                 </details>
               ) : (
-                <Link
+                <TopNavigationLink
                   ref={index === 0 ? firstLinkRef : undefined}
                   key={item.href}
                   href={item.href}
                   className={`mobile-nav-link${isCurrent(item.href) ? " is-active" : ""}`}
                   aria-current={isCurrent(item.href) ? "page" : undefined}
-                  onClick={closeMenu}
+                  onClick={navigateAndClose}
                 >
                   <span className="mobile-nav-index">{String(index + 1).padStart(2, "0")}</span>
                   <span className="mobile-nav-label">{item.label}</span>
                   <ArrowUpRight className="mobile-nav-arrow" size={17} aria-hidden="true" />
-                </Link>
+                </TopNavigationLink>
               ))}
             </nav>
 

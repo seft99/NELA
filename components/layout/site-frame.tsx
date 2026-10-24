@@ -6,6 +6,7 @@ import { AnnouncementBar } from "./announcement-bar";
 import { Footer } from "./footer";
 import { Header } from "./header";
 import { CartDrawer } from "@/components/cart/cart-drawer";
+import { TopNavigationScrollManager } from "@/components/navigation/top-navigation-link";
 
 export function SiteFrame({
   children,
@@ -22,6 +23,7 @@ export function SiteFrame({
 
   return (
     <>
+      <TopNavigationScrollManager />
       <AnnouncementBar />
       <Header productNavigation={productNavigation} />
       <main>{children}</main>

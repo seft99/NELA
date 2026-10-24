@@ -18,7 +18,7 @@ export function ProductInformation({ product }: { product: Product }) {
                 ? Palette
                 : Sparkles;
           return (
-            <div key={detail.key}>
+            <div className={`product-feature product-feature--${detail.kind}`} key={detail.key}>
               <Icon size={22} strokeWidth={1.45} aria-hidden="true" />
               <dt>{detail.label}</dt>
               <dd>{detail.value}</dd>

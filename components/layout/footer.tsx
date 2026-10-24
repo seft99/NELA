@@ -21,7 +21,7 @@ export function Footer({ variant = "dark" }: { variant?: FooterVariant }) {
             height={724}
             sizes="(max-width: 560px) 170px, 200px"
           />
-          <p>Accesorios de plata ley 925 elegidos con intención para acompañar tu estilo.</p>
+          <p>Joyas de plata ley 925 elegidas con intención para acompañar tu estilo.</p>
         </div>
         <nav className="footer-navigation" aria-label="Información de NELA">
           <Link href="/nosotros">Nosotros</Link>

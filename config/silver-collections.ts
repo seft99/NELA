@@ -5,6 +5,7 @@ export const silverCollections = [
     slug: "anillos",
     label: "Anillos",
     description: "Anillos de plata ley 925 para acompañar tu estilo cada día.",
+    mobileHeroDescription: "Diseños en plata ley 925 para cada ocasión.",
     catalogDescription: "Encuentra tu talla y descubre el anillo ideal para ti.",
     mobileCatalogTitle: "Encuentra tu anillo",
     mobileCatalogDescription: "Busca por nombre o filtra por talla.",
@@ -23,6 +24,7 @@ export const silverCollections = [
     slug: "aretes-y-topos",
     label: "Aretes y topos",
     description: "Aretes, argollas y topos para acompañar desde lo cotidiano hasta una ocasión especial.",
+    mobileHeroDescription: "Para tu día a día y tus ocasiones especiales.",
     catalogDescription: "Descubre pequeños detalles para complementar tu estilo.",
     mobileCatalogTitle: "Encuentra tus aretes",
     mobileCatalogDescription: "Filtra por tipo y encuentra el detalle ideal.",
@@ -41,6 +43,7 @@ export const silverCollections = [
     slug: "cadenas",
     label: "Cadenas",
     description: "Cadenas de plata ley 925 para usar solas, combinar en capas o acompañar tus dijes favoritos.",
+    mobileHeroDescription: "Para lucir solas o combinar con tus dijes.",
     catalogDescription: "Encuentra la cadena que mejor se adapte a tu estilo.",
     mobileCatalogTitle: "Encuentra tu cadena",
     mobileCatalogDescription: "Busca por nombre o filtra por longitud.",
@@ -59,6 +62,7 @@ export const silverCollections = [
     slug: "dijes",
     label: "Dijes",
     description: "Dijes con formas y detalles que aportan un significado personal a cada combinación.",
+    mobileHeroDescription: "Detalles que hacen personal cada combinación.",
     catalogDescription: "Explora detalles especiales para llevar contigo.",
     mobileCatalogTitle: "Encuentra tu dije",
     mobileCatalogDescription: "Busca por nombre y descubre un detalle especial.",
@@ -77,6 +81,7 @@ export const silverCollections = [
     slug: "pulseras",
     label: "Pulseras",
     description: "Pulseras de plata ley 925 para sumar un detalle sutil y luminoso a cada momento.",
+    mobileHeroDescription: "Un toque de plata para cada momento.",
     catalogDescription: "Descubre pulseras para acompañar cada momento.",
     mobileCatalogTitle: "Encuentra tu pulsera",
     mobileCatalogDescription: "Descubre la pieza ideal para acompañarte.",
@@ -94,6 +99,7 @@ export const silverCollections = [
   slug: string;
   label: string;
   description: string;
+  mobileHeroDescription: string;
   catalogDescription: string;
   mobileCatalogTitle: string;
   mobileCatalogDescription: string;

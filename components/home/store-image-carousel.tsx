@@ -51,11 +51,17 @@ export function StoreImageCarousel({
   ariaLabel = "Selección de accesorios de plata ley 925 NELA",
   priority = false,
   signatureLines,
+  variant = "default",
+  autoplayInterval = AUTOPLAY_INTERVAL,
+  autoplayOnSmallScreens = false,
 }: {
   slides?: readonly StoreCarouselSlide[];
   ariaLabel?: string;
   priority?: boolean;
   signatureLines?: readonly string[];
+  variant?: "default" | "editorial";
+  autoplayInterval?: number;
+  autoplayOnSmallScreens?: boolean;
 }) {
   const activeSlides = slides.length > 0 ? slides : defaultStoreCarouselSlides;
   const hasMultipleSlides = activeSlides.length > 1;
@@ -70,7 +76,7 @@ export function StoreImageCarousel({
   const [loadedIndexes, setLoadedIndexes] = useState<number[]>(() => (
     hasMultipleSlides ? [0, 1] : [0]
   ));
-  const autoplayBlocked = motionBlocked || smallScreen;
+  const autoplayBlocked = motionBlocked || (smallScreen && !autoplayOnSmallScreens);
   const autoplayPaused = userPaused || hovered || focused || documentHidden || autoplayBlocked;
 
   useEffect(() => {
@@ -105,15 +111,15 @@ export function StoreImageCarousel({
         current.includes(preloadIndex) ? current : [...current, preloadIndex]
       ));
       setActiveIndex(nextIndex);
-    }, AUTOPLAY_INTERVAL);
+    }, autoplayInterval);
     return () => window.clearTimeout(timer);
-  }, [activeSlides.length, autoplayPaused, displayedIndex, hasMultipleSlides]);
+  }, [activeSlides.length, autoplayInterval, autoplayPaused, displayedIndex, hasMultipleSlides]);
 
   const activateSlide = (index: number) => {
     const nextIndex = (index + activeSlides.length) % activeSlides.length;
     const preloadIndex = (nextIndex + 1) % activeSlides.length;
     setLoadedIndexes((current) => (
-      current.includes(preloadIndex) ? current : [...current, preloadIndex]
+      [...new Set([...current, nextIndex, preloadIndex])]
     ));
     setActiveIndex(nextIndex);
   };
@@ -129,7 +135,7 @@ export function StoreImageCarousel({
 
   return (
     <div
-      className="silver-carousel"
+      className={`silver-carousel${variant === "editorial" ? " silver-carousel--editorial" : ""}`}
       role="region"
       aria-roledescription="carrusel"
       aria-label={ariaLabel}

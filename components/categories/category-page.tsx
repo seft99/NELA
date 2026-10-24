@@ -14,7 +14,10 @@ export function CategoryPage({
   catalogDescription = "Busca, filtra y ordena la colección para encontrar tu próximo detalle.",
   mobileCatalogTitle,
   mobileCatalogDescription,
+  mobileHeroDescription,
   heroImages,
+  desktopHeroImages,
+  desktopHeroCopy,
   catalogContext = "all",
   editorialHeroReference,
 }: {
@@ -24,7 +27,15 @@ export function CategoryPage({
   catalogDescription?: string;
   mobileCatalogTitle?: string;
   mobileCatalogDescription?: string;
+  mobileHeroDescription?: string;
   heroImages?: readonly StoreCarouselSlide[];
+  desktopHeroImages?: readonly StoreCarouselSlide[];
+  desktopHeroCopy?: {
+    eyebrow: string;
+    title: string;
+    description: string;
+    cta: string;
+  };
   catalogContext?: CatalogExplorerContext;
   editorialHeroReference?: string;
 }) {
@@ -35,27 +46,64 @@ export function CategoryPage({
           category={category}
           products={products}
           preferredProductReference={editorialHeroReference}
+          mobileDescription={mobileHeroDescription}
         />
       ) : (
-        <section className={`category-hero tone-${category.tone}`}>
+        <section className={`category-hero tone-${category.tone}${desktopHeroCopy ? " category-hero--desktop-curated" : ""}`}>
           <div className="page-shell category-hero-grid">
             <div className="category-hero-copy reveal">
-              <p className="eyebrow">{category.eyebrow}</p>
-              <h1>{category.name}</h1>
-              <p>{category.description}</p>
-              <Link href="#catalogo" className="text-link">Descubrir la colección</Link>
+              <p className="eyebrow">
+                {desktopHeroCopy ? <span className="category-hero-desktop-only">{desktopHeroCopy.eyebrow}</span> : null}
+                <span className={desktopHeroCopy ? "category-hero-mobile-only" : undefined}>{category.eyebrow}</span>
+              </p>
+              <h1>
+                {desktopHeroCopy ? <span className="category-hero-desktop-only">{desktopHeroCopy.title}</span> : null}
+                <span className={desktopHeroCopy ? "category-hero-mobile-only" : undefined}>{category.name}</span>
+              </h1>
+              <p>
+                {desktopHeroCopy ? <span className="category-hero-desktop-only">{desktopHeroCopy.description}</span> : null}
+                <span className={desktopHeroCopy ? "category-hero-mobile-only" : undefined}>{category.description}</span>
+              </p>
+              <Link href="#catalogo" className="text-link">
+                {desktopHeroCopy ? <span className="category-hero-desktop-only">{desktopHeroCopy.cta}</span> : null}
+                <span className={desktopHeroCopy ? "category-hero-mobile-only" : undefined}>Descubrir la colección</span>
+              </Link>
             </div>
             <div className="category-hero-image image-reveal">
-              <StoreImageCarousel
-                slides={heroImages ?? [{ src: category.image, alt: category.imageAlt }]}
-                ariaLabel={`Galería de ${category.name}`}
-                priority
-              />
+              {desktopHeroImages?.length ? (
+                <>
+                  <div className="category-hero-carousel category-hero-carousel--desktop">
+                    <StoreImageCarousel
+                      slides={desktopHeroImages}
+                      ariaLabel={`Galería editorial de ${desktopHeroCopy?.title ?? category.name}`}
+                      priority
+                      variant="editorial"
+                      autoplayInterval={5_500}
+                    />
+                  </div>
+                  <div className="category-hero-carousel category-hero-carousel--mobile">
+                    <StoreImageCarousel
+                      slides={desktopHeroImages}
+                      ariaLabel={`Galería editorial de ${desktopHeroCopy?.title ?? category.name}`}
+                      priority
+                      variant="editorial"
+                      autoplayInterval={5_500}
+                      autoplayOnSmallScreens
+                    />
+                  </div>
+                </>
+              ) : (
+                <StoreImageCarousel
+                  slides={heroImages ?? [{ src: category.image, alt: category.imageAlt }]}
+                  ariaLabel={`Galería de ${category.name}`}
+                  priority
+                />
+              )}
             </div>
           </div>
         </section>
       )}
-      <section className={`section page-shell catalog-explorer-shell${catalogContext === "all" ? "" : " catalog-explorer-shell--category"}`}>
+      <section className={`section page-shell catalog-explorer-shell catalog-explorer-shell--${catalogContext === "all" ? "all" : "category"}`}>
         <div className="section-heading catalog-explorer-heading">
           <div>
             <p className="eyebrow">
@@ -67,7 +115,7 @@ export function CategoryPage({
               <span className="catalog-explorer-copy-mobile">{mobileCatalogTitle ?? catalogTitle}</span>
             </h2>
           </div>
-          <p>
+          <p className="catalog-explorer-description">
             <span className="catalog-explorer-copy-desktop">{catalogDescription}</span>
             <span className="catalog-explorer-copy-mobile">{mobileCatalogDescription ?? catalogDescription}</span>
           </p>

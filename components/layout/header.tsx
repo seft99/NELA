@@ -7,6 +7,7 @@ import { Search } from "lucide-react";
 import { primaryNavigation } from "@/config/navigation";
 import { MobileMenu } from "./mobile-menu";
 import { CartIcon } from "@/components/cart/cart-icon";
+import { TopNavigationLink } from "@/components/navigation/top-navigation-link";
 
 export function Header({ productNavigation }: { productNavigation: Record<string, string> }) {
   const pathname = usePathname();
@@ -38,14 +39,14 @@ export function Header({ productNavigation }: { productNavigation: Record<string
         </Link>
         <nav className="desktop-nav" aria-label="Navegación principal">
           {primaryNavigation.map((item) => (
-            <Link
+            <TopNavigationLink
               key={item.href}
               href={item.href}
               className={isCurrent(item.href) ? "is-active" : undefined}
               aria-current={isCurrent(item.href) ? "page" : undefined}
             >
               {item.label}
-            </Link>
+            </TopNavigationLink>
           ))}
         </nav>
         <div className="header-actions">

@@ -40,6 +40,7 @@ export default async function SilverCollectionPage({ params }: SilverCollectionP
       }}
       products={products}
       editorialHeroReference={collection.homeImageReference}
+      mobileHeroDescription={collection.mobileHeroDescription}
       catalogContext={collection.slug}
       catalogTitle={`Explora ${collection.label.toLocaleLowerCase("es")}`}
       catalogDescription={collection.catalogDescription}

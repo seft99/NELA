@@ -7,6 +7,7 @@ import { StoreImageCarousel } from "@/components/home/store-image-carousel";
 import { FavoritesEditorial } from "@/components/home/favorites-editorial";
 import { BrandEssenceEditorial } from "@/components/home/brand-essence-editorial";
 import { belongsToSilverCollection, silverCollections } from "@/config/silver-collections";
+import { TopNavigationLink } from "@/components/navigation/top-navigation-link";
 
 export default async function HomePage() {
   const products = await getProducts();
@@ -58,7 +59,7 @@ export default async function HomePage() {
         </div>
         <div className="home-collections-grid">
           {homeCollections.map(({ collection, image, productName }) => (
-            <Link
+            <TopNavigationLink
               href={`/accesorios-plata/${collection.slug}`}
               className="home-collection-item"
               key={collection.slug}
@@ -79,7 +80,7 @@ export default async function HomePage() {
               <span className="home-collection-link">
                 Descubrir <ArrowRight size={13} aria-hidden="true" />
               </span>
-            </Link>
+            </TopNavigationLink>
           ))}
         </div>
       </section>

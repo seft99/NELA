@@ -11,16 +11,28 @@ import { productInventoryLine, validateInventoryLines } from "@/lib/cart/invento
 export function AddToCartButton({
   product,
   compact = false,
+  mobileCompact = false,
 }: {
   product: Product;
   compact?: boolean;
+  mobileCompact?: boolean;
 }) {
   const { addProduct } = useCart();
   const [added, setAdded] = useState(false);
   const [checking, setChecking] = useState(false);
   const [blocked, setBlocked] = useState(false);
   const hasRequiredVariants = product.variants?.some((variant) => variant.required) ?? false;
-  const className = `product-add-button${compact ? " product-add-button--compact" : ""}`;
+  const className = `product-add-button${compact ? " product-add-button--compact" : ""}${mobileCompact ? " product-button--mobile-compact" : ""}`;
+  const defaultLabel = compact
+    ? "Carrito"
+    : mobileCompact
+      ? (
+          <>
+            <span className="product-button-label product-button-label--desktop">Agregar al carrito</span>
+            <span className="product-button-label product-button-label--mobile">Carrito</span>
+          </>
+        )
+      : "Agregar al carrito";
 
   if (!isProductPurchasable(product)) {
     return (
@@ -37,7 +49,7 @@ export function AddToCartButton({
         href={`/productos/${product.slug}`}
         aria-label={`Elegir opciones y agregar ${product.name} al carrito`}
       >
-        <ShoppingBag size={15} aria-hidden="true" /> {compact ? "Carrito" : "Agregar al carrito"}
+        <ShoppingBag size={15} aria-hidden="true" /> {defaultLabel}
       </Link>
     );
   }
@@ -74,9 +86,7 @@ export function AddToCartButton({
           ? "No disponible"
           : added
             ? "Añadido"
-            : compact
-              ? "Carrito"
-              : "Agregar al carrito"}
+            : defaultLabel}
     </button>
   );
 }

@@ -43,6 +43,8 @@ export default async function SilverCollectionPage({ params }: SilverCollectionP
       catalogContext={collection.slug}
       catalogTitle={`Explora ${collection.label.toLocaleLowerCase("es")}`}
       catalogDescription={collection.catalogDescription}
+      mobileCatalogTitle={collection.mobileCatalogTitle}
+      mobileCatalogDescription={collection.mobileCatalogDescription}
     />
   );
 }

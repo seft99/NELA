@@ -12,6 +12,8 @@ export function CategoryPage({
   products,
   catalogTitle = "Encuentra tu próximo detalle",
   catalogDescription = "Busca, filtra y ordena la colección para encontrar tu próximo detalle.",
+  mobileCatalogTitle,
+  mobileCatalogDescription,
   heroImages,
   catalogContext = "all",
   editorialHeroReference,
@@ -20,6 +22,8 @@ export function CategoryPage({
   products: Product[];
   catalogTitle?: string;
   catalogDescription?: string;
+  mobileCatalogTitle?: string;
+  mobileCatalogDescription?: string;
   heroImages?: readonly StoreCarouselSlide[];
   catalogContext?: CatalogExplorerContext;
   editorialHeroReference?: string;
@@ -51,13 +55,22 @@ export function CategoryPage({
           </div>
         </section>
       )}
-      <section className="section page-shell catalog-explorer-shell">
+      <section className={`section page-shell catalog-explorer-shell${catalogContext === "all" ? "" : " catalog-explorer-shell--category"}`}>
         <div className="section-heading catalog-explorer-heading">
           <div>
-            <p className="eyebrow">Selección NELA</p>
-            <h2>{catalogTitle}</h2>
+            <p className="eyebrow">
+              <span className="catalog-explorer-copy-desktop">Selección NELA</span>
+              <span className="catalog-explorer-copy-mobile">Explora la colección</span>
+            </p>
+            <h2>
+              <span className="catalog-explorer-copy-desktop">{catalogTitle}</span>
+              <span className="catalog-explorer-copy-mobile">{mobileCatalogTitle ?? catalogTitle}</span>
+            </h2>
           </div>
-          <p>{catalogDescription}</p>
+          <p>
+            <span className="catalog-explorer-copy-desktop">{catalogDescription}</span>
+            <span className="catalog-explorer-copy-mobile">{mobileCatalogDescription ?? catalogDescription}</span>
+          </p>
         </div>
         <ProductExplorer products={products} context={catalogContext} />
       </section>

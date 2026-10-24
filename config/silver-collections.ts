@@ -6,6 +6,8 @@ export const silverCollections = [
     label: "Anillos",
     description: "Anillos de plata ley 925 para acompañar tu estilo cada día.",
     catalogDescription: "Encuentra tu talla y descubre el anillo ideal para ti.",
+    mobileCatalogTitle: "Encuentra tu anillo",
+    mobileCatalogDescription: "Busca por nombre o filtra por talla.",
     image: "/images/store/anillo-floral.png",
     imageAlt: "Anillo floral de plata ley 925 sobre una composición en tonos marfil",
     heroImages: [
@@ -22,6 +24,8 @@ export const silverCollections = [
     label: "Aretes y topos",
     description: "Aretes, argollas y topos para acompañar desde lo cotidiano hasta una ocasión especial.",
     catalogDescription: "Descubre pequeños detalles para complementar tu estilo.",
+    mobileCatalogTitle: "Encuentra tus aretes",
+    mobileCatalogDescription: "Filtra por tipo y encuentra el detalle ideal.",
     image: "/images/store/argollas-entrelazadas.png",
     imageAlt: "Argollas de plata ley 925 entrelazadas sobre fondo neutro",
     heroImages: [
@@ -38,6 +42,8 @@ export const silverCollections = [
     label: "Cadenas",
     description: "Cadenas de plata ley 925 para usar solas, combinar en capas o acompañar tus dijes favoritos.",
     catalogDescription: "Encuentra la cadena que mejor se adapte a tu estilo.",
+    mobileCatalogTitle: "Encuentra tu cadena",
+    mobileCatalogDescription: "Busca por nombre o filtra por longitud.",
     image: "/images/store/cadena-venecia.png",
     imageAlt: "Cadena de plata ley 925 estilo venecia sobre una composición neutra",
     heroImages: [
@@ -54,6 +60,8 @@ export const silverCollections = [
     label: "Dijes",
     description: "Dijes con formas y detalles que aportan un significado personal a cada combinación.",
     catalogDescription: "Explora detalles especiales para llevar contigo.",
+    mobileCatalogTitle: "Encuentra tu dije",
+    mobileCatalogDescription: "Busca por nombre y descubre un detalle especial.",
     image: "/images/store/dije-floral.png",
     imageAlt: "Dije floral de plata ley 925 con piedras blancas sobre fondo neutro",
     heroImages: [
@@ -70,6 +78,8 @@ export const silverCollections = [
     label: "Pulseras",
     description: "Pulseras de plata ley 925 para sumar un detalle sutil y luminoso a cada momento.",
     catalogDescription: "Descubre pulseras para acompañar cada momento.",
+    mobileCatalogTitle: "Encuentra tu pulsera",
+    mobileCatalogDescription: "Descubre la pieza ideal para acompañarte.",
     image: "/images/store/pulsera-floral-verde.png",
     imageAlt: "Pulsera de plata ley 925 con detalles florales y circones verdes",
     heroImages: [
@@ -85,6 +95,8 @@ export const silverCollections = [
   label: string;
   description: string;
   catalogDescription: string;
+  mobileCatalogTitle: string;
+  mobileCatalogDescription: string;
   image: string;
   imageAlt: string;
   heroImages: readonly { src: string; alt: string; position?: string }[];

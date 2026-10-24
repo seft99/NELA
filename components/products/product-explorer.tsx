@@ -251,7 +251,7 @@ export function ProductExplorer({
   );
 
   return (
-    <div id="catalogo" className="catalog-section">
+    <div id="catalogo" className={`catalog-section catalog-section--${context}${context === "all" ? "" : " catalog-section--category"}`}>
       {showControls ? (
         <div className="catalog-controls">
           {showSearch ? (
@@ -368,6 +368,46 @@ export function ProductExplorer({
           ) : null}
           <p aria-live="polite" aria-atomic="true">{visibleProducts.length} {visibleProducts.length === 1 ? "referencia" : "referencias"}</p>
         </div>
+      </div>
+      {showAvailability ? (
+        <label className={`catalog-mobile-availability availability-option${filters.availableOnly ? " is-active" : ""}`}>
+          <input
+            type="checkbox"
+            checked={filters.availableOnly}
+            onChange={(event) => setFilters((current) => ({ ...current, availableOnly: event.target.checked }))}
+          />
+          <span className="availability-check" aria-hidden="true">
+            <Check size={13} strokeWidth={2.25} />
+          </span>
+          <span>Solo disponibles</span>
+        </label>
+      ) : null}
+      <div className={`catalog-mobile-results-sort${showSort ? " has-sort" : ""}`}>
+        <p aria-live="polite" aria-atomic="true">
+          {visibleProducts.length} {visibleProducts.length === 1 ? "referencia" : "referencias"}
+        </p>
+        {showSort ? (
+          <label className="catalog-mobile-sort">
+            <span>Ordenar</span>
+            <span className="catalog-mobile-sort-select">
+              <select
+                value={sort}
+                aria-label={`Orden actual: ${activeSortLabel}`}
+                onChange={(event) => selectSort(event.target.value as CatalogSort)}
+              >
+                {config.sortOptions.map((value) => (
+                  <option key={value} value={value}>{sortLabels[value]}</option>
+                ))}
+              </select>
+              <ChevronDown size={15} aria-hidden="true" />
+            </span>
+          </label>
+        ) : null}
+        {activeChips.length ? (
+          <button className="clear-filters catalog-mobile-clear" type="button" onClick={clearFilters}>
+            Limpiar filtros <X size={13} aria-hidden="true" />
+          </button>
+        ) : null}
       </div>
       {visibleProducts.length ? (
         <CatalogProductGrid products={visibleProducts} context={context} />

@@ -21,6 +21,7 @@ export function BuyNowButton({
   placement,
   onStatus,
   compact = false,
+  mobileCompact = false,
 }: {
   product: Product;
   quantity?: number;
@@ -28,6 +29,7 @@ export function BuyNowButton({
   placement: "card" | "detail";
   onStatus?: (status: PurchaseStatus) => void;
   compact?: boolean;
+  mobileCompact?: boolean;
 }) {
   const { whatsappNumber, siteUrl } = useCart();
   const checkout = useMemo(
@@ -35,10 +37,20 @@ export function BuyNowButton({
     [product, quantity, selectedVariants, siteUrl, whatsappNumber],
   );
   const className = placement === "card"
-    ? `product-add-button product-buy-button${compact ? " product-buy-button--compact" : ""}`
+    ? `product-add-button product-buy-button${compact ? " product-buy-button--compact" : ""}${mobileCompact ? " product-button--mobile-compact" : ""}`
     : "button button-primary purchase-buy-button";
   const needsProductOptions = placement === "card" &&
     (product.variants?.some((variant) => variant.required) ?? false);
+  const cardLabel = compact
+    ? "Comprar"
+    : mobileCompact
+      ? (
+          <>
+            <span className="product-button-label product-button-label--desktop">Comprar ahora</span>
+            <span className="product-button-label product-button-label--mobile">Comprar</span>
+          </>
+        )
+      : "Comprar ahora";
 
   if (!isProductPurchasable(product)) {
     return (
@@ -51,7 +63,7 @@ export function BuyNowButton({
   if (needsProductOptions) {
     return (
       <Link className={className} href={`/productos/${product.slug}`} aria-label={`Elegir opciones para comprar ${product.name}`}>
-        <MessageCircle size={15} aria-hidden="true" /> {compact ? "Comprar" : "Comprar ahora"}
+        <MessageCircle size={15} aria-hidden="true" /> {cardLabel}
       </Link>
     );
   }
@@ -95,7 +107,7 @@ export function BuyNowButton({
       title={!checkout.isNumberValid ? "WhatsApp aún no está configurado" : undefined}
       aria-label={`Comprar ${product.name} ahora por WhatsApp`}
     >
-      <MessageCircle size={placement === "card" ? 15 : 17} aria-hidden="true" /> {compact ? "Comprar" : placement === "detail" ? "Comprar por WhatsApp" : "Comprar ahora"}
+      <MessageCircle size={placement === "card" ? 15 : 17} aria-hidden="true" /> {placement === "detail" ? "Comprar por WhatsApp" : cardLabel}
     </button>
   );
 }

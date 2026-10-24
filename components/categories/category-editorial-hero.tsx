@@ -42,7 +42,7 @@ export function CategoryEditorialHero({
           <ol>
             <li><Link href="/">Inicio</Link></li>
             <li aria-hidden="true">/</li>
-            <li><Link href="/accesorios-plata">Accesorios de plata ley 925</Link></li>
+            <li><Link href="/accesorios-plata">Joyas de plata ley 925</Link></li>
             <li aria-hidden="true">/</li>
             <li aria-current="page">{category.name}</li>
           </ol>

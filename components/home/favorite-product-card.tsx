@@ -51,8 +51,8 @@ export function FavoriteProductCard({
       </div>
 
       <div className="favorite-product-actions" aria-label={`Opciones de compra para ${product.name}`}>
-        <BuyNowButton product={product} placement="card" compact={compactActions} />
-        <AddToCartButton product={product} compact={compactActions} />
+        <BuyNowButton product={product} placement="card" compact={compactActions} mobileCompact={size === "lead"} />
+        <AddToCartButton product={product} compact={compactActions} mobileCompact={size === "lead"} />
       </div>
     </article>
   );

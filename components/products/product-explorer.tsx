@@ -74,6 +74,7 @@ export function ProductExplorer({
   const [priceDraft, setPriceDraft] = useState({ min: "", max: "" });
   const [priceDraftError, setPriceDraftError] = useState("");
   const sortMenuRef = useRef<HTMLDetailsElement>(null);
+  const mobileSortMenuRef = useRef<HTMLDetailsElement>(null);
 
   const earringTypes = useMemo(
     () => options.productTypes.filter((type) => type === "argolla" || type === "topo" || type === "arete"),
@@ -84,6 +85,9 @@ export function ProductExplorer({
     const closeOnOutsideClick = (event: PointerEvent) => {
       if (sortMenuRef.current?.open && !sortMenuRef.current.contains(event.target as Node)) {
         sortMenuRef.current.removeAttribute("open");
+      }
+      if (mobileSortMenuRef.current?.open && !mobileSortMenuRef.current.contains(event.target as Node)) {
+        mobileSortMenuRef.current.removeAttribute("open");
       }
     };
     document.addEventListener("pointerdown", closeOnOutsideClick);
@@ -223,6 +227,7 @@ export function ProductExplorer({
   const selectSort = (value: CatalogSort) => {
     setSort(value);
     sortMenuRef.current?.removeAttribute("open");
+    mobileSortMenuRef.current?.removeAttribute("open");
   };
 
   const renderChoiceChips = (
@@ -387,21 +392,40 @@ export function ProductExplorer({
           {visibleProducts.length} {visibleProducts.length === 1 ? "referencia" : "referencias"}
         </p>
         {showSort ? (
-          <label className="catalog-mobile-sort">
+          <div className="catalog-mobile-sort">
             <span>Ordenar</span>
-            <span className="catalog-mobile-sort-select">
-              <select
-                value={sort}
+            <details
+              ref={mobileSortMenuRef}
+              className="sort-menu catalog-mobile-sort-menu"
+              onKeyDown={(event) => {
+                if (event.key === "Escape" && mobileSortMenuRef.current?.open) {
+                  mobileSortMenuRef.current.removeAttribute("open");
+                  mobileSortMenuRef.current.querySelector("summary")?.focus();
+                }
+              }}
+            >
+              <summary
                 aria-label={`Orden actual: ${activeSortLabel}`}
-                onChange={(event) => selectSort(event.target.value as CatalogSort)}
               >
+                <span>{activeSortLabel}</span>
+                <ChevronDown size={15} aria-hidden="true" />
+              </summary>
+              <div className="sort-options catalog-mobile-sort-options" aria-label="Opciones de orden">
                 {config.sortOptions.map((value) => (
-                  <option key={value} value={value}>{sortLabels[value]}</option>
+                  <button
+                    key={value}
+                    type="button"
+                    className={sort === value ? "is-selected" : undefined}
+                    aria-pressed={sort === value}
+                    onClick={() => selectSort(value)}
+                  >
+                    <span>{sortLabels[value]}</span>
+                    <Check size={15} aria-hidden="true" />
+                  </button>
                 ))}
-              </select>
-              <ChevronDown size={15} aria-hidden="true" />
-            </span>
-          </label>
+              </div>
+            </details>
+          </div>
         ) : null}
         {activeChips.length ? (
           <button className="clear-filters catalog-mobile-clear" type="button" onClick={clearFilters}>

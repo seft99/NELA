@@ -36,7 +36,14 @@ export function AddToCartButton({
 
   if (!isProductPurchasable(product)) {
     return (
-      <button className={className} type="button" disabled aria-label={`Agregar ${product.name} al carrito`}>
+      <button
+        className={className}
+        type="button"
+        disabled
+        title={mobileCompact ? "Agregar al carrito" : undefined}
+        aria-label={`Agregar ${product.name} al carrito`}
+      >
+        {mobileCompact ? <ShoppingBag size={15} aria-hidden="true" /> : null}
         No disponible
       </button>
     );
@@ -47,6 +54,7 @@ export function AddToCartButton({
       <Link
         className={className}
         href={`/productos/${product.slug}`}
+        title={mobileCompact ? "Agregar al carrito" : undefined}
         aria-label={`Elegir opciones y agregar ${product.name} al carrito`}
       >
         <ShoppingBag size={15} aria-hidden="true" /> {defaultLabel}
@@ -59,6 +67,7 @@ export function AddToCartButton({
       className={`${className}${added ? " is-added" : ""}`}
       type="button"
       disabled={checking || blocked}
+      title={mobileCompact ? "Agregar al carrito" : undefined}
       aria-label={`Agregar ${product.name} al carrito`}
       onClick={async () => {
         setChecking(true);

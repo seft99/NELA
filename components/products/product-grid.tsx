@@ -1,7 +1,15 @@
 import type { Product } from "@/types/product";
 import { ProductCard } from "./product-card";
 
-export function ProductGrid({ products, className = "" }: { products: Product[]; className?: string }) {
+export function ProductGrid({
+  products,
+  className = "",
+  compactMobileActions = false,
+}: {
+  products: Product[];
+  className?: string;
+  compactMobileActions?: boolean;
+}) {
   if (!products.length) {
     return (
       <div className="empty-state">
@@ -13,7 +21,13 @@ export function ProductGrid({ products, className = "" }: { products: Product[];
   }
   return (
     <div className={`product-grid${className ? ` ${className}` : ""}`}>
-      {products.map((product) => <ProductCard key={product.id} product={product} />)}
+      {products.map((product) => (
+        <ProductCard
+          key={product.id}
+          product={product}
+          compactMobileActions={compactMobileActions}
+        />
+      ))}
     </div>
   );
 }

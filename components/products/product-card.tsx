@@ -6,7 +6,13 @@ import type { Product } from "@/types/product";
 import { AddToCartButton } from "@/components/cart/add-to-cart-button";
 import { BuyNowButton } from "@/components/cart/buy-now-button";
 
-export function ProductCard({ product }: { product: Product }) {
+export function ProductCard({
+  product,
+  compactMobileActions = false,
+}: {
+  product: Product;
+  compactMobileActions?: boolean;
+}) {
   const image = product.images[0];
   const availability = getProductAvailability(product);
   return (
@@ -27,10 +33,23 @@ export function ProductCard({ product }: { product: Product }) {
           <p>{formatCOP(product.price)}</p>
         </div>
       </div>
-      <div className="product-card-actions">
-        <AddToCartButton product={product} />
-        <BuyNowButton product={product} placement="card" />
-      </div>
+      {compactMobileActions ? (
+        <>
+          <div className="product-card-actions product-card-actions--desktop">
+            <AddToCartButton product={product} />
+            <BuyNowButton product={product} placement="card" />
+          </div>
+          <div className="product-card-actions product-card-actions--mobile">
+            <BuyNowButton product={product} placement="card" mobileCompact />
+            <AddToCartButton product={product} mobileCompact />
+          </div>
+        </>
+      ) : (
+        <div className="product-card-actions">
+          <AddToCartButton product={product} />
+          <BuyNowButton product={product} placement="card" />
+        </div>
+      )}
     </article>
   );
 }

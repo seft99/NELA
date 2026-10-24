@@ -13,6 +13,7 @@ export function CatalogProductGrid({
     <ProductGrid
       products={products}
       className={`catalog-product-grid catalog-product-grid--${context}`}
+      compactMobileActions
     />
   );
 }

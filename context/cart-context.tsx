@@ -20,7 +20,7 @@ import {
   validateProductSelection,
 } from "@/lib/cart/cart-utils";
 import { CART_STORAGE_KEY, parsePersistedCart, serializeCart } from "@/lib/cart/storage";
-import type { AddToCartInput, CartItem, CartNotice } from "@/types/cart";
+import type { AddToCartInput, CartCatalogProduct, CartItem, CartNotice } from "@/types/cart";
 import type { Product } from "@/types/product";
 
 type CartState = {
@@ -100,7 +100,7 @@ export function CartProvider({
   siteUrl,
 }: {
   children: ReactNode;
-  catalog: Product[];
+  catalog: CartCatalogProduct[];
   whatsappNumber: string;
   siteUrl: string;
 }) {

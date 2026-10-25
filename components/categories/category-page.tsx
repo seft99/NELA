@@ -18,6 +18,7 @@ export function CategoryPage({
   heroImages,
   desktopHeroImages,
   desktopHeroCopy,
+  mobileHeroCopy,
   catalogContext = "all",
   editorialHeroReference,
 }: {
@@ -36,6 +37,12 @@ export function CategoryPage({
     description: string;
     cta: string;
   };
+  mobileHeroCopy?: {
+    eyebrow: string;
+    title: string;
+    description: string;
+    cta: string;
+  };
   catalogContext?: CatalogExplorerContext;
   editorialHeroReference?: string;
 }) {
@@ -49,24 +56,24 @@ export function CategoryPage({
           mobileDescription={mobileHeroDescription}
         />
       ) : (
-        <section className={`category-hero tone-${category.tone}${desktopHeroCopy ? " category-hero--desktop-curated" : ""}`}>
+        <section className={`category-hero tone-${category.tone}${desktopHeroCopy ? " category-hero--desktop-curated" : ""}${mobileHeroCopy ? " category-hero--catalog-mobile-refined" : ""}`}>
           <div className="page-shell category-hero-grid">
             <div className="category-hero-copy reveal">
               <p className="eyebrow">
                 {desktopHeroCopy ? <span className="category-hero-desktop-only">{desktopHeroCopy.eyebrow}</span> : null}
-                <span className={desktopHeroCopy ? "category-hero-mobile-only" : undefined}>{category.eyebrow}</span>
+                <span className={desktopHeroCopy ? "category-hero-mobile-only" : undefined}>{mobileHeroCopy?.eyebrow ?? category.eyebrow}</span>
               </p>
               <h1>
                 {desktopHeroCopy ? <span className="category-hero-desktop-only">{desktopHeroCopy.title}</span> : null}
-                <span className={desktopHeroCopy ? "category-hero-mobile-only" : undefined}>{category.name}</span>
+                <span className={desktopHeroCopy ? "category-hero-mobile-only" : undefined}>{mobileHeroCopy?.title ?? category.name}</span>
               </h1>
               <p>
                 {desktopHeroCopy ? <span className="category-hero-desktop-only">{desktopHeroCopy.description}</span> : null}
-                <span className={desktopHeroCopy ? "category-hero-mobile-only" : undefined}>{category.description}</span>
+                <span className={desktopHeroCopy ? "category-hero-mobile-only" : undefined}>{mobileHeroCopy?.description ?? category.description}</span>
               </p>
               <Link href="#catalogo" className="text-link">
                 {desktopHeroCopy ? <span className="category-hero-desktop-only">{desktopHeroCopy.cta}</span> : null}
-                <span className={desktopHeroCopy ? "category-hero-mobile-only" : undefined}>Descubrir la colección</span>
+                <span className={desktopHeroCopy ? "category-hero-mobile-only" : undefined}>{mobileHeroCopy?.cta ?? "Descubrir la colección"}</span>
               </Link>
             </div>
             <div className="category-hero-image image-reveal">

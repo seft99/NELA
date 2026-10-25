@@ -5,10 +5,12 @@ export function ProductGrid({
   products,
   className = "",
   compactMobileActions = false,
+  compactDesktopBuy = false,
 }: {
   products: Product[];
   className?: string;
   compactMobileActions?: boolean;
+  compactDesktopBuy?: boolean;
 }) {
   if (!products.length) {
     return (
@@ -26,6 +28,7 @@ export function ProductGrid({
           key={product.id}
           product={product}
           compactMobileActions={compactMobileActions}
+          compactDesktopBuy={compactDesktopBuy}
         />
       ))}
     </div>

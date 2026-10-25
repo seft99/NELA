@@ -1,4 +1,26 @@
-import type { CategorySlug, ProductCustomerDetails, ProductVariant } from "@/types/product";
+import type {
+  CategorySlug,
+  Product,
+  ProductCustomerDetails,
+  ProductVariant,
+} from "@/types/product";
+
+export type CartCatalogProduct = ProductCustomerDetails & Pick<
+  Product,
+  | "id"
+  | "slug"
+  | "name"
+  | "category"
+  | "price"
+  | "images"
+  | "reference"
+  | "variants"
+  | "stock"
+  | "variantInventory"
+  | "purchaseEnabled"
+  | "available"
+  | "visible"
+>;
 
 export type SelectedVariant = {
   variantId: string;

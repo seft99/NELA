@@ -1,4 +1,4 @@
-import type { CartItem, CartNotice, SelectedVariant } from "@/types/cart";
+import type { CartCatalogProduct, CartItem, CartNotice, SelectedVariant } from "@/types/cart";
 import type { CategorySlug, Product } from "@/types/product";
 import { pickCustomerDetails } from "@/lib/products/public-details";
 import { getAvailableStock, isProductPurchasable } from "@/lib/products/inventory";
@@ -26,7 +26,10 @@ export function createLineId(productId: string, selectedVariants: SelectedVarian
   return variantKey ? `${productId}::${variantKey}` : productId;
 }
 
-export function validateProductSelection(product: Product, selectedVariants: SelectedVariant[] = []) {
+export function validateProductSelection(
+  product: Pick<Product, "variants">,
+  selectedVariants: SelectedVariant[] = [],
+) {
   const productVariants = product.variants ?? [];
 
   for (const variant of productVariants) {
@@ -94,7 +97,7 @@ export function getCartSubtotal(items: CartItem[]) {
   );
 }
 
-export function reconcileCartItems(items: CartItem[], catalog: Product[]) {
+export function reconcileCartItems(items: CartItem[], catalog: CartCatalogProduct[]) {
   const productsById = new Map(catalog.map((product) => [product.id, product]));
   const notices: CartNotice[] = [];
 

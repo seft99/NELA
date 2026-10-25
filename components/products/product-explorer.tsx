@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronDown, Search, X } from "lucide-react";
+import { Check, ChevronDown, Search, SlidersHorizontal, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { WhatsappPrivacyNotice } from "@/components/privacy/whatsapp-privacy-notice";
 import {
@@ -84,6 +84,26 @@ function caretPositionAfterDigits(value: string, digitCount: number) {
   return value.length;
 }
 
+function validatePriceRange(
+  draft: { min: string; max: string },
+  lower: number,
+  upper: number,
+) {
+  const minPrice = draft.min === "" ? null : Number(draft.min);
+  const maxPrice = draft.max === "" ? null : Number(draft.max);
+  if ((minPrice !== null && !Number.isFinite(minPrice)) || (maxPrice !== null && !Number.isFinite(maxPrice))) {
+    return { minPrice: null, maxPrice: null, error: "Ingresa valores numéricos válidos." };
+  }
+  if ((minPrice !== null && (minPrice < lower || minPrice > upper))
+    || (maxPrice !== null && (maxPrice < lower || maxPrice > upper))) {
+    return { minPrice, maxPrice, error: `Usa valores entre ${formatCOP(lower)} y ${formatCOP(upper)}.` };
+  }
+  if (minPrice !== null && maxPrice !== null && minPrice > maxPrice) {
+    return { minPrice, maxPrice, error: "El precio mínimo no puede superar el máximo." };
+  }
+  return { minPrice, maxPrice, error: "" };
+}
+
 function FormattedCatalogPriceInput({
   id,
   label,
@@ -91,6 +111,7 @@ function FormattedCatalogPriceInput({
   placeholder,
   describedBy,
   onValueChange,
+  className = "catalog-price-input--desktop",
 }: {
   id: string;
   label: string;
@@ -98,9 +119,10 @@ function FormattedCatalogPriceInput({
   placeholder: number;
   describedBy: string;
   onValueChange: (value: string) => void;
+  className?: string;
 }) {
   return (
-    <label className="catalog-price-input catalog-price-input--desktop" htmlFor={id}>
+    <label className={`catalog-price-input ${className}`.trim()} htmlFor={id}>
       <span className="sr-only">{label}</span>
       <span className="price-money-input">
         <span aria-hidden="true">$</span>
@@ -143,8 +165,21 @@ export function ProductExplorer({
   const [urlReady, setUrlReady] = useState(false);
   const [priceDraft, setPriceDraft] = useState({ min: "", max: "" });
   const [priceDraftError, setPriceDraftError] = useState("");
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [mobileAdvancedDraft, setMobileAdvancedDraft] = useState<{
+    min: string;
+    max: string;
+    availableOnly: boolean;
+    sort: CatalogSort;
+  }>({ min: "", max: "", availableOnly: false, sort: "default" });
+  const [mobileAdvancedError, setMobileAdvancedError] = useState("");
   const sortMenuRef = useRef<HTMLDetailsElement>(null);
   const mobileSortMenuRef = useRef<HTMLDetailsElement>(null);
+  const mobileFilterTriggerRef = useRef<HTMLButtonElement>(null);
+  const mobileFilterDialogRef = useRef<HTMLDivElement>(null);
+  const mobileFilterCloseRef = useRef<HTMLButtonElement>(null);
+  const mobileFilterSortMenuRef = useRef<HTMLDetailsElement>(null);
+  const mobileFiltersWereOpen = useRef(false);
 
   const earringTypes = useMemo(
     () => options.productTypes.filter((type) => type === "argolla" || type === "topo" || type === "arete"),
@@ -159,10 +194,66 @@ export function ProductExplorer({
       if (mobileSortMenuRef.current?.open && !mobileSortMenuRef.current.contains(event.target as Node)) {
         mobileSortMenuRef.current.removeAttribute("open");
       }
+      if (mobileFilterSortMenuRef.current?.open && !mobileFilterSortMenuRef.current.contains(event.target as Node)) {
+        mobileFilterSortMenuRef.current.removeAttribute("open");
+      }
     };
     document.addEventListener("pointerdown", closeOnOutsideClick);
     return () => document.removeEventListener("pointerdown", closeOnOutsideClick);
   }, []);
+
+  useEffect(() => {
+    if (!mobileFiltersOpen) {
+      if (mobileFiltersWereOpen.current) mobileFilterTriggerRef.current?.focus();
+      mobileFiltersWereOpen.current = false;
+      return;
+    }
+
+    mobileFiltersWereOpen.current = true;
+    const mobileViewport = window.matchMedia("(max-width: 820px)");
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const focusFrame = window.requestAnimationFrame(() => mobileFilterCloseRef.current?.focus());
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        if (mobileFilterSortMenuRef.current?.open) {
+          mobileFilterSortMenuRef.current.removeAttribute("open");
+          mobileFilterSortMenuRef.current.querySelector("summary")?.focus();
+          return;
+        }
+        setMobileFiltersOpen(false);
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const focusable = Array.from(
+        mobileFilterDialogRef.current?.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), input:not([disabled]), select:not([disabled]), [href], [tabindex]:not([tabindex="-1"])',
+        ) ?? [],
+      ).filter((element) => element.getClientRects().length > 0 && element.tabIndex >= 0);
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    const closeOnDesktop = (event: MediaQueryListEvent) => {
+      if (!event.matches) setMobileFiltersOpen(false);
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    mobileViewport.addEventListener("change", closeOnDesktop);
+    return () => {
+      window.cancelAnimationFrame(focusFrame);
+      document.removeEventListener("keydown", handleKeyDown);
+      mobileViewport.removeEventListener("change", closeOnDesktop);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [mobileFiltersOpen]);
 
   useEffect(() => {
     const applyUrl = () => {
@@ -239,23 +330,46 @@ export function ProductExplorer({
   };
 
   const applyPriceDraft = () => {
-    const minPrice = priceDraft.min === "" ? null : Number(priceDraft.min);
-    const maxPrice = priceDraft.max === "" ? null : Number(priceDraft.max);
-    if ((minPrice !== null && !Number.isFinite(minPrice)) || (maxPrice !== null && !Number.isFinite(maxPrice))) {
-      setPriceDraftError("Ingresa valores numéricos válidos.");
-      return;
-    }
-    if ((minPrice !== null && (minPrice < options.minPrice || minPrice > options.maxPrice))
-      || (maxPrice !== null && (maxPrice < options.minPrice || maxPrice > options.maxPrice))) {
-      setPriceDraftError(`Usa valores entre ${formatCOP(options.minPrice)} y ${formatCOP(options.maxPrice)}.`);
-      return;
-    }
-    if (minPrice !== null && maxPrice !== null && minPrice > maxPrice) {
-      setPriceDraftError("El precio mínimo no puede superar el máximo.");
-      return;
-    }
-    setPriceDraftError("");
+    const { minPrice, maxPrice, error } = validatePriceRange(priceDraft, options.minPrice, options.maxPrice);
+    setPriceDraftError(error);
+    if (error) return;
     setFilters((current) => ({ ...current, minPrice, maxPrice }));
+  };
+
+  const openMobileFilters = () => {
+    setMobileAdvancedDraft({
+      min: filters.minPrice === null ? "" : String(filters.minPrice),
+      max: filters.maxPrice === null ? "" : String(filters.maxPrice),
+      availableOnly: filters.availableOnly,
+      sort,
+    });
+    setMobileAdvancedError("");
+    setMobileFiltersOpen(true);
+  };
+
+  const applyMobileAdvancedFilters = () => {
+    const { minPrice, maxPrice, error } = validatePriceRange(
+      mobileAdvancedDraft,
+      options.minPrice,
+      options.maxPrice,
+    );
+    setMobileAdvancedError(error);
+    if (error) return;
+    setPriceDraft({ min: mobileAdvancedDraft.min, max: mobileAdvancedDraft.max });
+    setPriceDraftError("");
+    setFilters((current) => ({
+      ...current,
+      minPrice,
+      maxPrice,
+      availableOnly: mobileAdvancedDraft.availableOnly,
+    }));
+    setSort(mobileAdvancedDraft.sort);
+    setMobileFiltersOpen(false);
+  };
+
+  const clearMobileAdvancedFilters = () => {
+    setMobileAdvancedDraft({ min: "", max: "", availableOnly: false, sort: "default" });
+    setMobileAdvancedError("");
   };
 
   const clearFilters = () => {
@@ -293,6 +407,10 @@ export function ProductExplorer({
   const showFilterPanel = showCategoryFilter || showPriceFilter || showRingSizeFilter
     || showLengthFilter || showEarringTypeFilter;
   const activeSortLabel = sortLabels[sort];
+  const hasActiveAdvancedFilters = filters.availableOnly
+    || filters.minPrice !== null
+    || filters.maxPrice !== null
+    || sort !== "default";
 
   const selectSort = (value: CatalogSort) => {
     setSort(value);
@@ -307,8 +425,9 @@ export function ProductExplorer({
     values: string[],
     onChange: (value: string) => void,
     labelFor: (value: string) => string = (value) => value,
+    className = "",
   ) => (
-    <div className="catalog-chip-group" role="group" aria-label={legend}>
+    <div className={`catalog-chip-group${className ? ` ${className}` : ""}`} role="group" aria-label={legend}>
       <span className="catalog-filter-label">{legend}</span>
       <div className="filter-options catalog-filter-chips">
         <label className={!selected ? "is-selected" : undefined}>
@@ -389,6 +508,22 @@ export function ProductExplorer({
         </div>
       ) : null}
 
+      {context === "all" ? (
+        <button
+          ref={mobileFilterTriggerRef}
+          type="button"
+          className={`catalog-mobile-filter-trigger${hasActiveAdvancedFilters ? " is-active" : ""}`}
+          aria-haspopup="dialog"
+          aria-expanded={mobileFiltersOpen}
+          aria-controls="catalog-mobile-filter-dialog"
+          onClick={openMobileFilters}
+        >
+          <SlidersHorizontal size={20} aria-hidden="true" />
+          <span>Filtrar y ordenar</span>
+          <ChevronDown size={18} aria-hidden="true" />
+        </button>
+      ) : null}
+
       <div className={`catalog-filter-row${showFilterPanel ? "" : " catalog-filter-row--results-only"}`}>
         {showFilterPanel ? (
           <div className="catalog-filter-groups">
@@ -400,6 +535,7 @@ export function ProductExplorer({
                 options.jewelryTypes,
                 selectCategory,
                 (value) => jewelryFilterLabels[value as JewelryType] ?? jewelryTypeLabels[value as JewelryType],
+                "catalog-category-group",
               )
             ) : null}
 
@@ -464,6 +600,131 @@ export function ProductExplorer({
           <p aria-live="polite" aria-atomic="true">{visibleProducts.length} {visibleProducts.length === 1 ? "referencia" : "referencias"}</p>
         </div>
       </div>
+      {context === "all" ? (
+        <div className="catalog-mobile-general-results">
+          <p aria-live="polite" aria-atomic="true">
+            {visibleProducts.length} {visibleProducts.length === 1 ? "referencia" : "referencias"}
+          </p>
+        </div>
+      ) : null}
+
+      {context === "all" && mobileFiltersOpen ? (
+        <div className="catalog-mobile-filter-layer">
+          <button
+            type="button"
+            className="catalog-mobile-filter-backdrop"
+            tabIndex={-1}
+            aria-label="Cerrar filtros"
+            onClick={() => setMobileFiltersOpen(false)}
+          />
+          <div
+            ref={mobileFilterDialogRef}
+            id="catalog-mobile-filter-dialog"
+            className="catalog-mobile-filter-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="catalog-mobile-filter-title"
+          >
+            <div className="catalog-mobile-filter-header">
+              <h2 id="catalog-mobile-filter-title">Filtrar y ordenar</h2>
+              <button
+                ref={mobileFilterCloseRef}
+                type="button"
+                aria-label="Cerrar filtros"
+                onClick={() => setMobileFiltersOpen(false)}
+              >
+                <X size={20} aria-hidden="true" />
+              </button>
+            </div>
+
+            <div className="catalog-mobile-filter-content">
+              {showPriceFilter ? (
+                <fieldset className="catalog-mobile-filter-fieldset">
+                  <legend>Precio</legend>
+                  <p id="mobile-price-limits" className="catalog-mobile-filter-help">
+                    Valores entre {formatCOP(options.minPrice)} y {formatCOP(options.maxPrice)}.
+                  </p>
+                  <div className="catalog-mobile-price-fields">
+                    <FormattedCatalogPriceInput
+                      id="catalog-mobile-sheet-price-min"
+                      label="Precio mínimo"
+                      value={mobileAdvancedDraft.min}
+                      placeholder={options.minPrice}
+                      describedBy={`mobile-price-limits${mobileAdvancedError ? " mobile-price-error" : ""}`}
+                      className="catalog-mobile-sheet-price-input"
+                      onValueChange={(value) => setMobileAdvancedDraft((current) => ({ ...current, min: value }))}
+                    />
+                    <FormattedCatalogPriceInput
+                      id="catalog-mobile-sheet-price-max"
+                      label="Precio máximo"
+                      value={mobileAdvancedDraft.max}
+                      placeholder={options.maxPrice}
+                      describedBy={`mobile-price-limits${mobileAdvancedError ? " mobile-price-error" : ""}`}
+                      className="catalog-mobile-sheet-price-input"
+                      onValueChange={(value) => setMobileAdvancedDraft((current) => ({ ...current, max: value }))}
+                    />
+                  </div>
+                  {mobileAdvancedError ? <p id="mobile-price-error" className="catalog-mobile-filter-error" role="alert">{mobileAdvancedError}</p> : null}
+                </fieldset>
+              ) : null}
+
+              {showAvailability ? (
+                <fieldset className="catalog-mobile-filter-fieldset">
+                  <legend>Disponibilidad</legend>
+                  <label className={`catalog-mobile-sheet-availability availability-option${mobileAdvancedDraft.availableOnly ? " is-active" : ""}`}>
+                    <input
+                      type="checkbox"
+                      checked={mobileAdvancedDraft.availableOnly}
+                      onChange={(event) => setMobileAdvancedDraft((current) => ({ ...current, availableOnly: event.target.checked }))}
+                    />
+                    <span className="availability-check" aria-hidden="true">
+                      <Check size={13} strokeWidth={2.25} />
+                    </span>
+                    <span>Solo disponibles</span>
+                  </label>
+                </fieldset>
+              ) : null}
+
+              {showSort ? (
+                <div className="catalog-mobile-filter-fieldset catalog-mobile-sort-select">
+                  <span>Ordenar por</span>
+                  <details
+                    ref={mobileFilterSortMenuRef}
+                    className="sort-menu catalog-mobile-sheet-sort-menu"
+                  >
+                    <summary aria-label={`Orden actual: ${sortLabels[mobileAdvancedDraft.sort]}`}>
+                      <span>{sortLabels[mobileAdvancedDraft.sort]}</span>
+                      <ChevronDown size={17} aria-hidden="true" />
+                    </summary>
+                    <div className="sort-options catalog-mobile-sheet-sort-options" aria-label="Opciones de orden">
+                      {config.sortOptions.map((value) => (
+                        <button
+                          key={value}
+                          type="button"
+                          className={mobileAdvancedDraft.sort === value ? "is-selected" : undefined}
+                          aria-pressed={mobileAdvancedDraft.sort === value}
+                          onClick={() => {
+                            setMobileAdvancedDraft((current) => ({ ...current, sort: value }));
+                            mobileFilterSortMenuRef.current?.removeAttribute("open");
+                          }}
+                        >
+                          <span>{sortLabels[value]}</span>
+                          <Check size={15} aria-hidden="true" />
+                        </button>
+                      ))}
+                    </div>
+                  </details>
+                </div>
+              ) : null}
+            </div>
+
+            <div className="catalog-mobile-filter-actions">
+              <button type="button" className="catalog-mobile-filter-clear" onClick={clearMobileAdvancedFilters}>Limpiar</button>
+              <button type="button" className="catalog-mobile-filter-apply" onClick={applyMobileAdvancedFilters}>Aplicar filtros</button>
+            </div>
+          </div>
+        </div>
+      ) : null}
       {showAvailability ? (
         <label className={`catalog-mobile-availability availability-option${filters.availableOnly ? " is-active" : ""}`}>
           <input

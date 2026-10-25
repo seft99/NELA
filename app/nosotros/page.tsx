@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
-export const metadata: Metadata = { title: "Nosotros", description: "Conoce la propuesta visual y la esencia de NELA Joyería." };
+export const metadata: Metadata = {
+  title: "Nosotros",
+  description: "Conoce la propuesta visual y la esencia de NELA Joyería.",
+  alternates: { canonical: "/nosotros" },
+};
 
 export default function AboutPage() {
   return (

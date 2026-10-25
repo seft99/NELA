@@ -14,6 +14,7 @@ export function CatalogProductGrid({
       products={products}
       className={`catalog-product-grid catalog-product-grid--${context}`}
       compactMobileActions
+      compactDesktopBuy={context === "all"}
     />
   );
 }

@@ -33,7 +33,11 @@ const desktopCatalogHeroSlides = [
   },
 ] as const;
 
-export const metadata: Metadata = { title: "Accesorios de Plata Ley 925", description: "Explora la colección de accesorios de plata ley 925 de NELA Joyería." };
+export const metadata: Metadata = {
+  title: "Accesorios de Plata Ley 925",
+  description: "Explora la colección de accesorios de plata ley 925 de NELA Joyería.",
+  alternates: { canonical: "/accesorios-plata" },
+};
 
 export default async function SilverPage() {
   const products = await getProductsByCategory("accesorios-plata");
@@ -49,8 +53,14 @@ export default async function SilverPage() {
         description: "Diseños delicados para acompañar cada momento.",
         cta: "DESCUBRIR LA COLECCIÓN",
       }}
+      mobileHeroCopy={{
+        eyebrow: "BRILLO SERENO",
+        title: "Joyas de plata ley 925",
+        description: "Diseños delicados para expresar tu estilo.",
+        cta: "DESCUBRIR LA COLECCIÓN",
+      }}
       catalogDescription="Explora nuestra selección de joyas en plata ley 925 y encuentra una pieza para ti."
-      mobileCatalogDescription="Busca, filtra y ordena la colección para encontrar tu próximo detalle."
+      mobileCatalogDescription="Explora nuestras joyas y encuentra tu favorita."
       catalogContext="all"
     />
   );

@@ -6,6 +6,7 @@ import { SiteFrame } from "@/components/layout/site-frame";
 import { CartProvider } from "@/context/cart-context";
 import { getProducts } from "@/lib/products";
 import { getSilverCollectionForJewelryType } from "@/config/silver-collections";
+import type { CartCatalogProduct } from "@/types/cart";
 
 // The global cart reconciles against live inventory on every request.
 export const dynamic = "force-dynamic";
@@ -36,11 +37,34 @@ export const metadata: Metadata = {
     type: "website",
     images: [{ url: "/images/editorial/hero-nela-demo.png", alt: "Composición editorial NELA Joyería" }],
   },
-  icons: { icon: "/images/branding/nela-logo-transparent.png", shortcut: "/images/branding/nela-logo-transparent.png" },
+  icons: {
+    icon: [{ url: "/images/branding/nela-favicon-circular.png", type: "image/png", sizes: "1254x1254" }],
+    shortcut: "/images/branding/nela-favicon-circular.png",
+  },
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const catalog = await getProducts();
+  const cartCatalog: CartCatalogProduct[] = catalog.map((product) => ({
+    id: product.id,
+    slug: product.slug,
+    name: product.name,
+    category: product.category,
+    price: product.price,
+    images: product.images.slice(0, 1),
+    reference: product.reference,
+    variants: product.variants,
+    stock: product.stock,
+    variantInventory: product.variantInventory,
+    purchaseEnabled: product.purchaseEnabled,
+    available: product.available,
+    visible: product.visible,
+    presentation: product.presentation,
+    quantityOrVolume: product.quantityOrVolume,
+    material: product.material,
+    finish: product.finish,
+    measurements: product.measurements,
+  }));
   const productNavigation = Object.fromEntries(catalog.flatMap((product) => {
     if (product.category !== "accesorios-plata") return [];
     const collection = getSilverCollectionForJewelryType(product.catalogAttributes?.jewelryType);
@@ -66,7 +90,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: organizationJsonLd }} />
         <a className="skip-link" href="#contenido">Saltar al contenido</a>
         <CartProvider
-          catalog={catalog}
+          catalog={cartCatalog}
           whatsappNumber={siteConfig.contact.whatsappNumber}
           siteUrl={siteConfig.url}
         >

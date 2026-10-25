@@ -9,9 +9,11 @@ import { TopNavigationLink } from "@/components/navigation/top-navigation-link";
 export function ProductCard({
   product,
   compactMobileActions = false,
+  compactDesktopBuy = false,
 }: {
   product: Product;
   compactMobileActions?: boolean;
+  compactDesktopBuy?: boolean;
 }) {
   const image = product.images[0];
   const availability = getProductAvailability(product);
@@ -42,7 +44,7 @@ export function ProductCard({
         <>
           <div className="product-card-actions product-card-actions--desktop">
             <AddToCartButton product={product} />
-            <BuyNowButton product={product} placement="card" />
+            <BuyNowButton product={product} placement="card" compact={compactDesktopBuy} />
           </div>
           <div className="product-card-actions product-card-actions--mobile">
             <BuyNowButton product={product} placement="card" mobileCompact />

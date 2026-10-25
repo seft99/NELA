@@ -17,6 +17,7 @@ export async function generateMetadata({ params }: SilverCollectionPageProps): P
   return {
     title: `${collection.label} de Plata Ley 925`,
     description: collection.description,
+    alternates: { canonical: `/accesorios-plata/${collection.slug}` },
   };
 }
 

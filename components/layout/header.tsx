@@ -3,13 +3,20 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Search } from "lucide-react";
 import { primaryNavigation } from "@/config/navigation";
 import { MobileMenu } from "./mobile-menu";
 import { CartIcon } from "@/components/cart/cart-icon";
 import { TopNavigationLink } from "@/components/navigation/top-navigation-link";
+import { GlobalProductSearch } from "@/components/search/global-product-search";
+import type { SearchCatalogProduct } from "@/lib/products/search";
 
-export function Header({ productNavigation }: { productNavigation: Record<string, string> }) {
+export function Header({
+  productNavigation,
+  searchCatalog,
+}: {
+  productNavigation: Record<string, string>;
+  searchCatalog: SearchCatalogProduct[];
+}) {
   const pathname = usePathname();
   const productSlug = pathname.startsWith("/productos/")
     ? decodeURIComponent(pathname.slice("/productos/".length).split("/")[0] ?? "")
@@ -50,9 +57,7 @@ export function Header({ productNavigation }: { productNavigation: Record<string
           ))}
         </nav>
         <div className="header-actions">
-          <Link href="/accesorios-plata#catalogo" className="icon-button header-search" aria-label="Buscar accesorios de plata ley 925">
-            <Search size={19} />
-          </Link>
+          <GlobalProductSearch products={searchCatalog} />
           <CartIcon />
         </div>
       </div>

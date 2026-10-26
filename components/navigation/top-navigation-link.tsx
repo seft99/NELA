@@ -10,6 +10,10 @@ type ScrollResetScope = "all" | "mobile" | null;
 const mobileRouteMedia = "(max-width: 820px)";
 let resetOnNextPathnameChange: ScrollResetScope = null;
 
+export function prepareTopNavigationScrollReset(scope: Exclude<ScrollResetScope, null> = "all") {
+  resetOnNextPathnameChange = scope;
+}
+
 export function TopNavigationLink({
   href,
   mobileOnly = false,

@@ -1,4 +1,5 @@
 import { isProductPurchasable } from "@/lib/products/inventory";
+import { matchesProductSearch, normalizeProductSearch } from "@/lib/products/search";
 import type { JewelryAudience, JewelryType, Product } from "@/types/product";
 
 export type CatalogSort = "default" | "price-asc" | "price-desc" | "name-asc" | "name-desc";
@@ -61,14 +62,7 @@ export const emptyCatalogFilters: CatalogFilterState = {
   lengths: [],
 };
 
-export function normalizeCatalogSearch(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .trim()
-    .replace(/\s+/g, " ")
-    .toLocaleLowerCase("es");
-}
+export const normalizeCatalogSearch = normalizeProductSearch;
 
 function unique(values: Array<string | undefined>) {
   return [...new Set(values.flatMap((value) => value?.trim() ? [value.trim()] : []))]
@@ -111,9 +105,7 @@ export function filterCatalogProducts(products: Product[], filters: CatalogFilte
   return products.filter((product) => {
     if (!product.visible) return false;
     const attributes = product.catalogAttributes;
-    return (!query
-        || normalizeCatalogSearch(product.name).includes(query)
-        || normalizeCatalogSearch(product.reference ?? "").includes(query))
+    return (!query || matchesProductSearch(product, query))
       && (!filters.availableOnly || isProductPurchasable(product))
       && (filters.minPrice === null || product.price >= filters.minPrice)
       && (filters.maxPrice === null || product.price <= filters.maxPrice)

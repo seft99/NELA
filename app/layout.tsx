@@ -6,6 +6,7 @@ import { SiteFrame } from "@/components/layout/site-frame";
 import { CartProvider } from "@/context/cart-context";
 import { getProducts } from "@/lib/products";
 import { getSilverCollectionForJewelryType } from "@/config/silver-collections";
+import { createSearchCatalogProduct } from "@/lib/products/search";
 import type { CartCatalogProduct } from "@/types/cart";
 
 // The global cart reconciles against live inventory on every request.
@@ -70,6 +71,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     const collection = getSilverCollectionForJewelryType(product.catalogAttributes?.jewelryType);
     return collection ? [[product.slug, `/accesorios-plata/${collection.slug}`]] : [];
   }));
+  const searchCatalog = catalog
+    .filter((product) => product.visible && !product.isDemo)
+    .map(createSearchCatalogProduct);
   const organizationJsonLd = JSON.stringify({
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -94,7 +98,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           whatsappNumber={siteConfig.contact.whatsappNumber}
           siteUrl={siteConfig.url}
         >
-          <SiteFrame productNavigation={productNavigation}>{children}</SiteFrame>
+          <SiteFrame productNavigation={productNavigation} searchCatalog={searchCatalog}>{children}</SiteFrame>
         </CartProvider>
       </body>
     </html>

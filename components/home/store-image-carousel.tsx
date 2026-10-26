@@ -2,9 +2,20 @@
 
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const AUTOPLAY_INTERVAL = 6_500;
+const MOBILE_CAROUSEL_QUERY = "(max-width: 820px)";
+const SWIPE_THRESHOLD = 46;
+const SWIPE_DIRECTION_RATIO = 1.15;
+
+type SwipeGesture = {
+  pointerId: number;
+  startX: number;
+  startY: number;
+  latestX: number;
+  latestY: number;
+};
 
 export type StoreCarouselSlide = {
   src: string;
@@ -53,7 +64,6 @@ export function StoreImageCarousel({
   signatureLines,
   variant = "default",
   autoplayInterval = AUTOPLAY_INTERVAL,
-  autoplayOnSmallScreens = false,
 }: {
   slides?: readonly StoreCarouselSlide[];
   ariaLabel?: string;
@@ -61,7 +71,6 @@ export function StoreImageCarousel({
   signatureLines?: readonly string[];
   variant?: "default" | "editorial";
   autoplayInterval?: number;
-  autoplayOnSmallScreens?: boolean;
 }) {
   const activeSlides = slides.length > 0 ? slides : defaultStoreCarouselSlides;
   const hasMultipleSlides = activeSlides.length > 1;
@@ -76,12 +85,15 @@ export function StoreImageCarousel({
   const [loadedIndexes, setLoadedIndexes] = useState<number[]>(() => (
     hasMultipleSlides ? [0, 1] : [0]
   ));
-  const autoplayBlocked = motionBlocked || (smallScreen && !autoplayOnSmallScreens);
+  const swipeGesture = useRef<SwipeGesture | null>(null);
+  const suppressClick = useRef(false);
+  const suppressClickTimer = useRef<number | null>(null);
+  const autoplayBlocked = motionBlocked || smallScreen;
   const autoplayPaused = userPaused || hovered || focused || documentHidden || autoplayBlocked;
 
   useEffect(() => {
     const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const screenQuery = window.matchMedia("(max-width: 820px)");
+    const screenQuery = window.matchMedia(MOBILE_CAROUSEL_QUERY);
     const updatePreferences = () => {
       setMotionBlocked(motionQuery.matches);
       setSmallScreen(screenQuery.matches);
@@ -93,6 +105,10 @@ export function StoreImageCarousel({
       motionQuery.removeEventListener("change", updatePreferences);
       screenQuery.removeEventListener("change", updatePreferences);
     };
+  }, []);
+
+  useEffect(() => () => {
+    if (suppressClickTimer.current !== null) window.clearTimeout(suppressClickTimer.current);
   }, []);
 
   useEffect(() => {
@@ -133,6 +149,58 @@ export function StoreImageCarousel({
     activateSlide(displayedIndex + 1);
   };
 
+  const startSwipe = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (
+      !hasMultipleSlides
+      || !event.isPrimary
+      || event.pointerType !== "touch"
+      || !window.matchMedia(MOBILE_CAROUSEL_QUERY).matches
+    ) return;
+
+    swipeGesture.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      latestX: event.clientX,
+      latestY: event.clientY,
+    };
+  };
+
+  const trackSwipe = (event: React.PointerEvent<HTMLDivElement>) => {
+    const gesture = swipeGesture.current;
+    if (!gesture || gesture.pointerId !== event.pointerId) return;
+    gesture.latestX = event.clientX;
+    gesture.latestY = event.clientY;
+  };
+
+  const cancelSwipe = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (swipeGesture.current?.pointerId === event.pointerId) swipeGesture.current = null;
+  };
+
+  const finishSwipe = (event: React.PointerEvent<HTMLDivElement>) => {
+    const gesture = swipeGesture.current;
+    if (!gesture || gesture.pointerId !== event.pointerId) return;
+    gesture.latestX = event.clientX;
+    gesture.latestY = event.clientY;
+    swipeGesture.current = null;
+
+    const horizontalDistance = gesture.latestX - gesture.startX;
+    const verticalDistance = gesture.latestY - gesture.startY;
+    const horizontalIntent = Math.abs(horizontalDistance) >= SWIPE_THRESHOLD
+      && Math.abs(horizontalDistance) > Math.abs(verticalDistance) * SWIPE_DIRECTION_RATIO;
+    if (!horizontalIntent) return;
+
+    suppressClick.current = true;
+    if (suppressClickTimer.current !== null) window.clearTimeout(suppressClickTimer.current);
+    suppressClickTimer.current = window.setTimeout(() => {
+      suppressClick.current = false;
+      suppressClickTimer.current = null;
+    }, 400);
+
+    if (horizontalDistance < 0) activateSlide(displayedIndex + 1);
+    else activateSlide(displayedIndex - 1);
+  };
+
   return (
     <div
       className={`silver-carousel${variant === "editorial" ? " silver-carousel--editorial" : ""}`}
@@ -156,7 +224,20 @@ export function StoreImageCarousel({
         }
       }}
     >
-      <div className="silver-carousel-slides" aria-live="off">
+      <div
+        className="silver-carousel-slides"
+        aria-live="off"
+        onPointerDown={startSwipe}
+        onPointerMove={trackSwipe}
+        onPointerUp={finishSwipe}
+        onPointerCancel={cancelSwipe}
+        onClickCapture={(event) => {
+          if (!suppressClick.current) return;
+          event.preventDefault();
+          event.stopPropagation();
+          suppressClick.current = false;
+        }}
+      >
         {activeSlides.map((slide, index) => (
           <div
             className={`silver-carousel-slide${index === displayedIndex ? " is-active" : ""}`}
@@ -224,7 +305,7 @@ export function StoreImageCarousel({
                 aria-label={`Ver imagen ${index + 1} de ${activeSlides.length}`}
                 aria-current={index === displayedIndex ? "true" : undefined}
                 onClick={() => {
-                  setUserPaused(true);
+                  if (!window.matchMedia(MOBILE_CAROUSEL_QUERY).matches) setUserPaused(true);
                   activateSlide(index);
                 }}
                 key={slide.src}

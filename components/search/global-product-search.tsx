@@ -25,7 +25,7 @@ export function GlobalProductSearch({ products }: { products: SearchCatalogProdu
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(-1);
   const [isMobile, setIsMobile] = useState(false);
-  const [placement, setPlacement] = useState({ top: 84, left: 16, width: 480 });
+  const [placement, setPlacement] = useState({ top: 84, left: 16, width: 480, maxHeight: 680 });
   const deferredQuery = useDeferredValue(query);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -52,12 +52,17 @@ export function GlobalProductSearch({ products }: { products: SearchCatalogProdu
     if (!trigger) return;
     const rect = trigger.getBoundingClientRect();
     const mobile = window.matchMedia(mobileSearchMedia).matches;
+    const top = Math.round(rect.bottom + 8);
     const width = mobile ? Math.max(280, window.innerWidth - 24) : Math.min(480, window.innerWidth - 32);
     const left = mobile
       ? Math.max(12, (window.innerWidth - width) / 2)
       : Math.min(window.innerWidth - width - 16, Math.max(16, rect.right - width));
+    const viewportBottom = window.visualViewport
+      ? window.visualViewport.offsetTop + window.visualViewport.height
+      : window.innerHeight;
+    const maxHeight = Math.max(0, Math.floor(viewportBottom - top - (mobile ? 12 : 16)));
     setIsMobile(mobile);
-    setPlacement({ top: Math.round(rect.bottom + 8), left: Math.round(left), width: Math.round(width) });
+    setPlacement({ top, left: Math.round(left), width: Math.round(width), maxHeight });
   }, []);
 
   const closeSearch = useCallback((restoreFocus = true) => {
@@ -185,7 +190,13 @@ export function GlobalProductSearch({ products }: { products: SearchCatalogProdu
         <Search size={19} aria-hidden="true" />
       </button>
       {rendered && typeof document !== "undefined" ? createPortal(
-        <div className={`global-search-layer${open ? " is-open" : ""}`} style={{ "--global-search-top": `${placement.top}px` } as React.CSSProperties}>
+        <div
+          className={`global-search-layer${open ? " is-open" : ""}`}
+          style={{
+            "--global-search-top": `${placement.top}px`,
+            "--global-search-available-height": `${placement.maxHeight}px`,
+          } as React.CSSProperties}
+        >
           <button
             type="button"
             className="global-search-backdrop"

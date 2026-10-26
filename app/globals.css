@@ -278,6 +278,7 @@ h1, h2, h3 { font-family: var(--font-display), Georgia, serif; font-weight: 500;
   .global-search-panel::before { display: none; }
   .global-search-panel-header { min-height: 46px; padding-inline: 1rem .55rem; }
   .global-search-form { margin: 0 1rem .9rem; }
+  .global-search-form input { font-size: 16px; }
   .global-search-content { padding-inline: 1rem; }
   .global-search-result { min-height: 86px; grid-template-columns: 68px minmax(0,1fr) 20px; gap: .7rem; }
   .global-search-result-media { width: 68px; height: 68px; }
@@ -2549,7 +2550,7 @@ body.mobile-menu-open { overflow: hidden; }
     background: rgba(250,247,242,.58);
   }
   .catalog-section--category .search-control input {
-    min-height: 46px; font-size: .82rem;
+    min-height: 46px; font-size: 16px;
   }
 
   .catalog-section--category .catalog-filter-row,
@@ -2676,7 +2677,7 @@ body.mobile-menu-open { overflow: hidden; }
     width: 100%; min-height: 54px; gap: .8rem; padding-inline: 1rem;
     background: rgba(250,247,242,.58);
   }
-  .catalog-section--all .search-control input { min-height: 52px; font-size: .88rem; }
+  .catalog-section--all .search-control input { min-height: 52px; font-size: 16px; }
 
   .catalog-section--all .catalog-mobile-filter-trigger {
     position: relative; width: 100%; min-height: 54px; display: flex; align-items: center;

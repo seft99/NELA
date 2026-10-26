@@ -95,6 +95,7 @@ export function CategoryPage({
                       priority
                       variant="editorial"
                       autoplayInterval={5_500}
+                      mobileTapNavigation
                     />
                   </div>
                 </>

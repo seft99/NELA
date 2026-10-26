@@ -8,6 +8,9 @@ const AUTOPLAY_INTERVAL = 6_500;
 const MOBILE_CAROUSEL_QUERY = "(max-width: 820px)";
 const SWIPE_THRESHOLD = 46;
 const SWIPE_DIRECTION_RATIO = 1.15;
+const TAP_MOVEMENT_TOLERANCE = 12;
+const TAP_DURATION_LIMIT = 500;
+const TAP_SIDE_RATIO = 0.35;
 
 type SwipeGesture = {
   pointerId: number;
@@ -15,6 +18,7 @@ type SwipeGesture = {
   startY: number;
   latestX: number;
   latestY: number;
+  startTime: number;
 };
 
 export type StoreCarouselSlide = {
@@ -64,6 +68,7 @@ export function StoreImageCarousel({
   signatureLines,
   variant = "default",
   autoplayInterval = AUTOPLAY_INTERVAL,
+  mobileTapNavigation = false,
 }: {
   slides?: readonly StoreCarouselSlide[];
   ariaLabel?: string;
@@ -71,6 +76,7 @@ export function StoreImageCarousel({
   signatureLines?: readonly string[];
   variant?: "default" | "editorial";
   autoplayInterval?: number;
+  mobileTapNavigation?: boolean;
 }) {
   const activeSlides = slides.length > 0 ? slides : defaultStoreCarouselSlides;
   const hasMultipleSlides = activeSlides.length > 1;
@@ -149,6 +155,15 @@ export function StoreImageCarousel({
     activateSlide(displayedIndex + 1);
   };
 
+  const suppressFollowingClick = () => {
+    suppressClick.current = true;
+    if (suppressClickTimer.current !== null) window.clearTimeout(suppressClickTimer.current);
+    suppressClickTimer.current = window.setTimeout(() => {
+      suppressClick.current = false;
+      suppressClickTimer.current = null;
+    }, 400);
+  };
+
   const startSwipe = (event: React.PointerEvent<HTMLDivElement>) => {
     if (
       !hasMultipleSlides
@@ -163,6 +178,7 @@ export function StoreImageCarousel({
       startY: event.clientY,
       latestX: event.clientX,
       latestY: event.clientY,
+      startTime: event.timeStamp,
     };
   };
 
@@ -188,17 +204,29 @@ export function StoreImageCarousel({
     const verticalDistance = gesture.latestY - gesture.startY;
     const horizontalIntent = Math.abs(horizontalDistance) >= SWIPE_THRESHOLD
       && Math.abs(horizontalDistance) > Math.abs(verticalDistance) * SWIPE_DIRECTION_RATIO;
-    if (!horizontalIntent) return;
+    if (horizontalIntent) {
+      suppressFollowingClick();
+      if (horizontalDistance < 0) activateSlide(displayedIndex + 1);
+      else activateSlide(displayedIndex - 1);
+      return;
+    }
 
-    suppressClick.current = true;
-    if (suppressClickTimer.current !== null) window.clearTimeout(suppressClickTimer.current);
-    suppressClickTimer.current = window.setTimeout(() => {
-      suppressClick.current = false;
-      suppressClickTimer.current = null;
-    }, 400);
+    if (!mobileTapNavigation) return;
+    const target = event.target;
+    if (target instanceof Element && target.closest("a, button, input, select, textarea, [role='button']")) return;
 
-    if (horizontalDistance < 0) activateSlide(displayedIndex + 1);
-    else activateSlide(displayedIndex - 1);
+    const isTap = Math.abs(horizontalDistance) <= TAP_MOVEMENT_TOLERANCE
+      && Math.abs(verticalDistance) <= TAP_MOVEMENT_TOLERANCE
+      && event.timeStamp - gesture.startTime <= TAP_DURATION_LIMIT;
+    if (!isTap) return;
+
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const relativePosition = bounds.width > 0 ? (event.clientX - bounds.left) / bounds.width : 0.5;
+    if (relativePosition > TAP_SIDE_RATIO && relativePosition < 1 - TAP_SIDE_RATIO) return;
+
+    suppressFollowingClick();
+    if (relativePosition <= TAP_SIDE_RATIO) activateSlide(displayedIndex - 1);
+    else activateSlide(displayedIndex + 1);
   };
 
   return (

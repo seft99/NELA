@@ -47,6 +47,7 @@ export default async function HomePage() {
               ariaLabel="Selección editorial NELA Joyería"
               priority
               signatureLines={["Belleza", "en cada", "historia"]}
+              mobileTapNavigation
             />
           </div>
         </div>

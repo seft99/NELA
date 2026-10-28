@@ -1,0 +1,13 @@
+# Copiar como .dev.vars solo para pruebas locales del Worker.
+# Nunca confirmar secretos reales en Git.
+NEXT_PUBLIC_SITE_URL=http://127.0.0.1:8787
+NEXT_PUBLIC_SANITY_PROJECT_ID=0l7ykvj6
+NEXT_PUBLIC_SANITY_DATASET=production
+SANITY_API_VERSION=2025-02-19
+NELA_TRUST_CHATGPT_AUTH_HEADERS=0
+
+# El panel administrativo queda deshabilitado en Cloudflare hasta integrar una
+# identidad confiable. Configurar estos secretos no sustituye autenticación.
+SANITY_API_WRITE_TOKEN=
+INVENTORY_ADMIN_EMAILS=
+INVENTORY_ADMIN_USER_IDS=

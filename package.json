@@ -11,6 +11,16 @@
     "dev": "node scripts/run-framework.mjs dev",
     "build": "node scripts/run-framework.mjs build",
     "build:vercel": "next build",
+    "check:cloudflare": "node scripts/run-cloudflare.mjs check",
+    "dev:cloudflare": "node scripts/run-cloudflare.mjs dev",
+    "build:cloudflare": "node scripts/run-cloudflare.mjs build",
+    "preview:cloudflare": "node scripts/run-cloudflare.mjs preview",
+    "preview:cloudflare:remote": "node scripts/run-cloudflare.mjs remote-preview",
+    "deploy:cloudflare": "node scripts/run-cloudflare.mjs deploy",
+    "verify:cloudflare": "node scripts/verify-cloudflare.mjs",
+    "scan:cloudflare:secrets": "node scripts/scan-cloudflare-secrets.mjs",
+    "verify:sanity:read": "node --env-file-if-exists=.env.local scripts/verify-sanity-read.mjs",
+    "cf-typegen": "wrangler types --config wrangler.jsonc cloudflare-env.d.ts",
     "test:catalog": "node scripts/catalog-tests.mjs",
     "test:cart": "node scripts/cart-tests.mjs",
     "test:inventory": "node scripts/inventory-tests.mjs",
@@ -72,7 +82,7 @@
     "typescript": "5.9.3",
     "vinext": "1.0.0-beta.5",
     "vite": "8.0.13",
-    "wrangler": "4.92.0"
+    "wrangler": "4.151.0"
   },
   "type": "module",
   "overrides": {

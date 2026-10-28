@@ -15,7 +15,7 @@ export default async function InventoryAdminPage() {
         <h1 id="admin-access-title">El panel no está habilitado en este alojamiento.</h1>
         <p>
           La tienda pública puede funcionar aquí, pero el acceso administrativo necesita un
-          proveedor de identidad confiable antes de habilitarse en Vercel.
+          proveedor de identidad confiable antes de habilitarse en este alojamiento.
         </p>
         <Link className="button button-outline" href="/">Volver al sitio</Link>
       </section>

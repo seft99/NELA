@@ -19,12 +19,16 @@ const SIGN_OUT_PATH = "/signout-with-chatgpt";
 const CALLBACK_PATH = "/callback";
 
 /**
- * ChatGPT Sites injects and protects these identity headers. On Vercel the
- * same header names would be supplied by the visitor, so they must never be
- * trusted there without a dedicated authentication integration.
+ * ChatGPT Sites injects and protects these identity headers. Public hosts do
+ * not, so they are trusted only when the managed environment explicitly opts
+ * in. Standalone Cloudflare and Vercel deployments must leave the flag off
+ * until a dedicated, verified authentication integration is available.
  */
 export function chatGPTAuthAvailable(): boolean {
-  return process.env.VERCEL !== "1";
+  return (
+    process.env.VERCEL !== "1" &&
+    process.env.NELA_TRUST_CHATGPT_AUTH_HEADERS === "1"
+  );
 }
 
 export async function getChatGPTUser(): Promise<ChatGPTUser | null> {

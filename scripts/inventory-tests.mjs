@@ -61,10 +61,26 @@ try {
   ), true);
 
   const previousVercel = process.env.VERCEL;
+  const previousHeaderTrust = process.env.NELA_TRUST_CHATGPT_AUTH_HEADERS;
+  delete process.env.NELA_TRUST_CHATGPT_AUTH_HEADERS;
+  assert.equal(
+    auth.chatGPTAuthAvailable(),
+    false,
+    "Identity headers must be denied by default on an untrusted host.",
+  );
+  process.env.NELA_TRUST_CHATGPT_AUTH_HEADERS = "1";
+  delete process.env.VERCEL;
+  assert.equal(
+    auth.chatGPTAuthAvailable(),
+    true,
+    "The managed Sites host can explicitly enable protected identity headers.",
+  );
   process.env.VERCEL = "1";
   assert.equal(auth.chatGPTAuthAvailable(), false, "Vercel must not trust ChatGPT Sites headers.");
   if (previousVercel === undefined) delete process.env.VERCEL;
   else process.env.VERCEL = previousVercel;
+  if (previousHeaderTrust === undefined) delete process.env.NELA_TRUST_CHATGPT_AUTH_HEADERS;
+  else process.env.NELA_TRUST_CHATGPT_AUTH_HEADERS = previousHeaderTrust;
   assert.equal(access.isInventoryAdmin(
     { userId: "user-2", email: "other@example.com" },
     { emails: "owner@example.com", userIds: "user-1" },

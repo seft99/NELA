@@ -13,10 +13,15 @@ const { d1, r2 } = hostingConfig;
 // macOS Seatbelt blocks FSEvents, so Codex previews need polling for HMR.
 const isCodexSeatbeltSandbox = process.env.CODEX_SANDBOX === "seatbelt";
 const managedLinux = readExecutionProfile() === "managed-linux";
+const standaloneCloudflare =
+  process.env.NELA_CLOUDFLARE_STANDALONE === "1";
 
 const localBindingConfig = {
   main: "./build/sites-worker.ts",
   compatibility_flags: ["nodejs_compat"],
+  vars: {
+    NELA_TRUST_CHATGPT_AUTH_HEADERS: "1",
+  },
   d1_databases: d1
     ? [
         {
@@ -50,6 +55,18 @@ export default defineConfig(async ({ command }) => {
 
   // Wrangler snapshots its log path while the Cloudflare plugin is imported.
   const { cloudflare } = await import("@cloudflare/vite-plugin");
+
+  if (standaloneCloudflare) {
+    return {
+      plugins: [
+        vinext(),
+        cloudflare({
+          viteEnvironment: { name: "rsc", childEnvironments: ["ssr"] },
+          inspectorPort: false,
+        }),
+      ],
+    };
+  }
 
   return {
     server: {

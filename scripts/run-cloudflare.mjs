@@ -35,6 +35,7 @@ if (command === "deploy") {
 const projectEnvironment = {
   ...process.env,
   NELA_CLOUDFLARE_STANDALONE: "1",
+  NEXT_PUBLIC_NELA_CLOUDFLARE_NAVIGATION_FALLBACK: "1",
 };
 const vinextCli = fileURLToPath(
   new URL("../node_modules/vinext/dist/cli.js", import.meta.url),

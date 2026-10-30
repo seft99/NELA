@@ -17,6 +17,8 @@ import {
 } from "@/lib/products/search";
 
 const mobileSearchMedia = "(max-width: 820px)";
+const useCloudflareNavigationFallback =
+  process.env.NEXT_PUBLIC_NELA_CLOUDFLARE_NAVIGATION_FALLBACK === "1";
 
 export function GlobalProductSearch({ products }: { products: SearchCatalogProduct[] }) {
   const router = useRouter();
@@ -91,6 +93,10 @@ export function GlobalProductSearch({ products }: { products: SearchCatalogProdu
     navigatingRef.current = true;
     prepareTopNavigationScrollReset("all");
     closeSearch(false);
+    if (useCloudflareNavigationFallback) {
+      window.location.assign(href);
+      return;
+    }
     router.push(href, { scroll: true });
   }, [closeSearch, router]);
 

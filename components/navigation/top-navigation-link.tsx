@@ -8,6 +8,8 @@ import type { ComponentProps } from "react";
 type ScrollResetScope = "all" | "mobile" | null;
 
 const mobileRouteMedia = "(max-width: 820px)";
+const useCloudflareNavigationFallback =
+  process.env.NEXT_PUBLIC_NELA_CLOUDFLARE_NAVIGATION_FALLBACK === "1";
 let resetOnNextPathnameChange: ScrollResetScope = null;
 
 export function prepareTopNavigationScrollReset(scope: Exclude<ScrollResetScope, null> = "all") {
@@ -82,6 +84,50 @@ export function TopNavigationScrollManager() {
       window.cancelAnimationFrame(settleFrame);
       restoreBehavior();
     };
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!useCloudflareNavigationFallback) return;
+
+    const handleCloudflareNavigation = (event: MouseEvent) => {
+      if (
+        event.defaultPrevented ||
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey
+      ) return;
+
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const anchor = target.closest<HTMLAnchorElement>("a[href]");
+      if (
+        !anchor ||
+        (anchor.target && anchor.target !== "_self") ||
+        anchor.hasAttribute("download")
+      ) return;
+
+      const destination = new URL(anchor.href, window.location.href);
+      if (destination.origin !== window.location.origin) return;
+
+      const sameDocument =
+        destination.pathname === window.location.pathname &&
+        destination.search === window.location.search;
+
+      // Hash links within the current document keep their native behavior.
+      if (sameDocument && destination.hash) return;
+
+      // vinext beta currently throws during client-side Link transitions in
+      // the Workers build. A full document navigation preserves every route,
+      // browser history and direct-link behavior without affecting Vercel.
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      window.location.assign(destination.href);
+    };
+
+    window.addEventListener("click", handleCloudflareNavigation, true);
+    return () => window.removeEventListener("click", handleCloudflareNavigation, true);
   }, []);
 
   useLayoutEffect(() => {

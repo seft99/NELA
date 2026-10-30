@@ -110,7 +110,8 @@ aplicación no los necesita para mantener su comportamiento actual.
   `X-Robots-Tag: noindex` únicamente a hosts `*.workers.dev`; Vercel y un futuro
   dominio propio no reciben esa cabecera.
 - `scripts/run-cloudflare.mjs`: ejecutor multiplataforma que aísla el modo
-  Cloudflare independiente.
+  Cloudflare independiente y activa el fallback de navegación sólo en ese
+  build.
 - `scripts/verify-cloudflare-preview.mjs`: smoke test remoto reutilizable para
   rutas públicas, producto real, SEO, 404 y límites administrativos.
 - `.dev.vars.example`: plantilla sin secretos.
@@ -127,6 +128,10 @@ aplicación no los necesita para mantener su comportamiento actual.
 - `.gitignore`: ignora `.dev.vars*` y conserva únicamente el ejemplo.
 - `app/chatgpt-auth.ts`: las cabeceras de identidad sólo se confían mediante un
   opt-in explícito en un entorno administrado.
+- `components/navigation/top-navigation-link.tsx`: en el build Cloudflare,
+  convierte enlaces internos en navegaciones de documento completo para evitar
+  el fallo de transiciones RSC de la versión beta de vinext. Vercel conserva la
+  navegación cliente original.
 - `app/admin/inventario/page.tsx`: texto neutral respecto del proveedor.
 - `scripts/inventory-tests.mjs`: pruebas del nuevo límite de confianza.
 
@@ -313,20 +318,29 @@ controlada se publicó sin targets. Al activar `workers.dev`, la validación
 detectó que Cloudflare no añadía `noindex` a la ruta productiva; se aplicó un
 rollback inmediato, se incorporó una protección específica por hostname y se
 publicó una versión corregida. Después de validar la versión aislada se reactivó
-la ruta pública. El estado reproducible final corresponde al deployment
+la ruta pública. Ese primer corte seguro correspondió al deployment
 `7764c730-81bf-4315-a58e-26364fa25c11`, con la versión
-`9820e830-d87d-4406-9f4c-41e3bad58eb3` al 100 %. No se añadió custom domain ni
-se modificó DNS. Vercel sigue atendiendo la web original.
+`9820e830-d87d-4406-9f4c-41e3bad58eb3` al 100 %. La versión vigente se documenta
+a continuación. No se añadió custom domain ni se modificó DNS. Vercel sigue
+atendiendo la web original.
 
-La URL versionada de validación es:
+Después de detectar que las rutas directas respondían pero las transiciones de
+`next/link` fallaban en el runtime cliente de vinext beta, se validó un fallback
+de navegación de documento completo en una preview aislada y se publicó la
+corrección. El estado público actual corresponde a la versión
+`46ce2806-3293-4d6a-adaa-9e6d30305e20`.
+
+La URL pública de validación es:
 
 ```text
 https://nela-joyeria.nela-joyeria.workers.dev
 ```
 
 El verificador remoto aprobó 17 comprobaciones sobre la versión aislada y volvió
-a aprobarlas sobre la ruta pública final (~415 ms de pared), incluida
-`X-Robots-Tag: noindex`.
+a aprobarlas sobre la ruta pública final (~420 ms de pared), incluida
+`X-Robots-Tag: noindex`. En navegador se recorrieron mediante clics reales
+Inicio → categoría → producto, producto → Contacto, FAQ → Privacidad y la
+búsqueda predictiva → producto. Todas finalizaron en la ruta y título esperados.
 
 ## 7. Lista de verificación para una preview remota
 
@@ -411,19 +425,19 @@ También aplican las cuotas externas de la API/CDN de Sanity.
 | Build vinext/Cloudflare | PASS | `pnpm run build:cloudflare`. |
 | Wrangler dry-run | PASS | Artefacto generado, 120 módulos runtime, 108 assets. |
 | Workers Preview remota | PASS | Preview aislada creada y accesible. |
-| Deployment productivo controlado | PASS | Deployment `7764c730…`; versión `9820e830…` al 100 %. |
+| Deployment productivo controlado | PASS | Versión pública actual `46ce2806…`; corrección de navegación incluida. |
 | Ruta pública Workers | PASS | `nela-joyeria.nela-joyeria.workers.dev`; 17/17 comprobaciones y `noindex`. |
 | Protección de producción | PASS | `pnpm run deploy:cloudflare` se niega a publicar sin `--confirm-production`. |
 | Escaneo de valores privados | PASS | Dos valores privados locales revisados; ninguno quedó incrustado en módulos/assets del upload. |
 | Preview runtime Workers local | PASS | Wrangler local sirvió la aplicación. |
-| Rutas principales | PASS | Verificación remota: inicio, catálogo, cinco categorías, información, robots y sitemap: HTTP 200. |
+| Rutas principales | PASS | HTTP 200 y navegación real por clic entre Inicio, categoría, producto, Contacto, FAQ y Privacidad. |
 | Ruta inexistente | PASS | HTTP 404. |
 | Producto dinámico | PASS | Acceso directo a un slug real: HTTP 200. |
 | Sanity production | PASS | Lectura pública sin token: 44 productos, 44 visibles, 1 sin stock; IDs, SKU, slugs, precios, stock e imágenes válidos. |
 | Imágenes | PASS | Imagen real de Sanity respondió 200 `image/png`; sin referencias `/_next/image`. |
 | API de validación | PASS | Respuesta `no-store`; producto falso rechazado. |
 | API administrativa | PASS | Respuesta 401 sin identidad confiable. |
-| Búsqueda predictiva | PASS | Consulta `lazo` mostró imagen, categoría, precio y ruta reales. |
+| Búsqueda predictiva | PASS | Consulta `lazo` navegó en el Worker público hasta `/productos/lazo`. |
 | Filtros/contador | PASS | Búsqueda `lazo`, limpieza y filtro Anillos actualizan URL y resultados. |
 | Ordenamiento | PASS PARCIAL | El control abre en la preview; no se recorrieron todas las opciones. |
 | Carrito y stock | PASS | Producto real añadido; persistencia visual, total y límite de stock verificados. |
@@ -433,7 +447,7 @@ También aplican las cuotas externas de la API/CDN de Sanity.
 | Render remoto 1440 px | PASS | Captura de la preview: composición, imágenes y controles renderizaron correctamente. |
 | Resto de anchos solicitados | NOT TESTED | No se capturó cada ancho en navegador real durante esta preparación. |
 | iOS Safari / Android Chrome reales | NOT TESTED | No había dispositivos físicos conectados. |
-| Rendimiento HTTP remoto | PASS | Preview inicial: ~412 ms; ruta pública final: ~415 ms en 17 comprobaciones. No equivale a CPU. |
+| Rendimiento HTTP remoto | PASS | Preview inicial: ~412 ms; ruta pública final: ~420 ms en 17 comprobaciones. No equivale a CPU. |
 | CPU Free real | NOT TESTED | La ruta ya está activa, pero falta observar tráfico real en Workers Logs antes de un corte de dominio. |
 
 ## 11. Estado de preparación

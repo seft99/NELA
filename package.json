@@ -18,6 +18,7 @@
     "preview:cloudflare:remote": "node scripts/run-cloudflare.mjs remote-preview",
     "deploy:cloudflare": "node scripts/run-cloudflare.mjs deploy",
     "verify:cloudflare": "node scripts/verify-cloudflare.mjs",
+    "verify:cloudflare:preview": "node scripts/verify-cloudflare-preview.mjs",
     "scan:cloudflare:secrets": "node scripts/scan-cloudflare-secrets.mjs",
     "verify:sanity:read": "node --env-file-if-exists=.env.local scripts/verify-sanity-read.mjs",
     "cf-typegen": "wrangler types --config wrangler.jsonc cloudflare-env.d.ts",

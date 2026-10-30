@@ -1,8 +1,8 @@
 # Preparación de NELA para Cloudflare Workers
 
-> Estado: **READY FOR AUTHORIZED REMOTE PREVIEW**. Esta rama prepara y valida la
-> aplicación, pero no crea un Worker, no despliega, no cambia DNS y no modifica
-> el dataset `production` de Sanity.
+> Estado: **REMOTE PREVIEW VALIDATED / PRODUCTION NOT DEPLOYED**. La rama compila,
+> publica una preview aislada y la valida, pero no activa una versión productiva,
+> no cambia DNS y no modifica el dataset `production` de Sanity.
 
 ## 1. Estrategia seleccionada
 
@@ -103,10 +103,12 @@ aplicación no los necesita para mantener su comportamiento actual.
 ### Nuevos
 
 - `wrangler.jsonc`: entrada del Worker, fecha/flags de compatibilidad y binding
-  de assets; habilita URLs temporales e incluye el bloque `previews` requerido
-  para entornos aislados.
+  de assets; desactiva la ruta productiva `workers.dev`, habilita URLs temporales
+  e incluye el bloque `previews` requerido para entornos aislados.
 - `scripts/run-cloudflare.mjs`: ejecutor multiplataforma que aísla el modo
   Cloudflare independiente.
+- `scripts/verify-cloudflare-preview.mjs`: smoke test remoto reutilizable para
+  rutas públicas, producto real, SEO, 404 y límites administrativos.
 - `.dev.vars.example`: plantilla sin secretos.
 - `CLOUDFLARE_DEPLOYMENT.md`: esta guía.
 
@@ -134,6 +136,7 @@ pnpm run preview:cloudflare
 pnpm run preview:cloudflare:remote
 pnpm run deploy:cloudflare
 pnpm run verify:cloudflare
+pnpm run verify:cloudflare:preview -- https://<preview>.workers.dev
 pnpm run cf-typegen
 ```
 
@@ -142,7 +145,9 @@ Cloudflare autorizada, `preview:cloudflare:remote` publicará una versión aisla
 con URL temporal mediante Workers Previews; no crea una versión activa de
 producción. `deploy:cloudflare` está bloqueado por defecto y sólo acepta un
 despliegue de producción si se añade explícitamente `--confirm-production`.
-Ninguno de los dos comandos remotos se ejecutó.
+La preview remota se creó sin activar producción. La ruta productiva
+`nela-joyeria.nela-joyeria.workers.dev` permanece deshabilitada; sólo la URL
+aislada de preview está disponible.
 
 `verify:cloudflare` es un preflight local sin publicación: ejecuta
 compatibilidad, tipos, lint, pruebas funcionales contra el dataset configurado,
@@ -240,6 +245,23 @@ identidad administrativa. Antes de cada preview remota o deploy, el ejecutor
 vuelve a escanear el artefacto y detiene el upload si encuentra un valor privado
 incrustado.
 
+Preview validada el 29 de octubre de 2026:
+
+```text
+https://cloudflare-migration-prep-nela-joyeria.nela-joyeria.workers.dev
+```
+
+Verificación reproducible:
+
+```bash
+pnpm run verify:cloudflare:preview -- https://cloudflare-migration-prep-nela-joyeria.nela-joyeria.workers.dev
+```
+
+El verificador aprobó 17 comprobaciones: inicio, catálogo, cinco categorías,
+contacto, preguntas frecuentes, privacidad, producto real, robots, sitemap,
+404, panel administrativo restringido, API administrativa 401 y cabecera
+`X-Robots-Tag: noindex`.
+
 ### Opción B: preview continua con Workers Builds
 
 Estas acciones son deliberadamente manuales y no fueron ejecutadas:
@@ -300,8 +322,9 @@ antes de autorizar expresamente el cambio. La protección evita que un simple
    prueba a clientes.
 8. Validar navegación, scroll y diseño en 320, 360, 375, 393, 430, 440, 768,
    1024, 1280, 1440 y 1920 px.
-9. Revisar Workers Logs/Observability para errores, subrequests, memoria y,
-   especialmente, tiempo de CPU por ruta.
+9. Revisar Workers Logs/Observability en una versión productiva controlada antes
+   del corte. Cloudflare no ofrece Workers Logs, Wrangler tail ni Logpush para
+   Preview URLs; una preview aislada sólo permite medir tiempo de pared HTTP.
 10. Confirmar que `/admin/inventario` y `/api/admin/inventory` no conceden
     acceso sin autenticación verificada.
 
@@ -325,9 +348,9 @@ Las rutas dinámicas consultan Sanity y el layout raíz carga el catálogo compl
 para carrito/búsqueda. Los tiempos locales observados fueron aproximadamente
 478–976 ms de pared, dominados por red/SSR; no equivalen a CPU.
 
-Antes de un corte de tráfico es obligatorio desplegar una preview y medir CPU
-real en Workers Logs. Si una ruta supera 10 ms, las opciones, en este orden,
-son:
+Antes de un corte de tráfico es obligatorio medir CPU real en una versión
+productiva controlada con observabilidad, porque Cloudflare no expone esos logs
+para Preview URLs. Si una ruta supera 10 ms, las opciones, en este orden, son:
 
 1. reducir serialización/cómputo repetido conservando frescura de precio/stock;
 2. separar datos estrictamente globales del catálogo completo;
@@ -366,11 +389,11 @@ También aplican las cuotas externas de la API/CDN de Sanity.
 | Build Vercel/Next.js | PASS | `VERCEL=1 pnpm run build:vercel`. |
 | Build vinext/Cloudflare | PASS | `pnpm run build:cloudflare`. |
 | Wrangler dry-run | PASS | Artefacto generado, 120 módulos runtime, 108 assets. No desplegó. |
-| Workers Previews | READY / NOT DEPLOYED | Wrangler `4.151.0` reconoce `wrangler preview`; `previews: {}` se conserva en el artefacto generado. Requiere acceso autorizado. |
+| Workers Preview remota | PASS | Preview aislada creada y accesible; producción `workers.dev` deshabilitada. |
 | Protección de producción | PASS | `pnpm run deploy:cloudflare` se niega a publicar sin `--confirm-production`. |
 | Escaneo de valores privados | PASS | Dos valores privados locales revisados; ninguno quedó incrustado en módulos/assets del upload. |
 | Preview runtime Workers local | PASS | Wrangler local sirvió la aplicación. |
-| Rutas principales | PASS | Inicio, catálogo, categorías, información, robots y sitemap: HTTP 200. |
+| Rutas principales | PASS | Verificación remota: inicio, catálogo, cinco categorías, información, robots y sitemap: HTTP 200. |
 | Ruta inexistente | PASS | HTTP 404. |
 | Producto dinámico | PASS | Acceso directo a un slug real: HTTP 200. |
 | Sanity production | PASS | Lectura pública sin token: 44 productos, 44 visibles, 1 sin stock; IDs, SKU, slugs, precios, stock e imágenes válidos. |
@@ -383,22 +406,23 @@ También aplican las cuotas externas de la API/CDN de Sanity.
 | Carrito y stock | PASS | Producto real añadido; persistencia visual, total y límite de stock verificados. |
 | WhatsApp/Instagram externos | NOT TESTED | No se abrió ni envió comunicación externa; lógica cubierta por suite existente/inspección. |
 | Detalle de producto | PASS | Galería, SKU, stock, atributos, cantidad, acciones, tabs y relacionados renderizan. |
-| Comparación visual 393 px | PASS | Capturas local Cloudflare y Vercel comparadas; sin diferencia visual relevante. |
-| Comparación visual 1440 px | PASS | Composición equivalente; sólo cambió el slide activo por autoplay. |
+| Render remoto 393 px | PASS | Captura de la preview: fuentes, imágenes Sanity, hero y colecciones cargaron sin recursos rotos. |
+| Render remoto 1440 px | PASS | Captura de la preview: composición, imágenes y controles renderizaron correctamente. |
 | Resto de anchos solicitados | NOT TESTED | No se capturó cada ancho en navegador real durante esta preparación. |
 | iOS Safari / Android Chrome reales | NOT TESTED | No había dispositivos físicos conectados. |
-| CPU Free real | NOT TESTED | Requiere una preview remota y Workers Logs; el wall time local no es CPU. |
+| Rendimiento HTTP remoto | PASS | 17 comprobaciones; tiempo de pared medio aproximado de 412 ms. No equivale a CPU. |
+| CPU Free real | NOT TESTED | Preview URLs no admiten Workers Logs, Wrangler tail ni Logpush; requiere una versión productiva controlada y autorización explícita. |
 
 ## 11. Estado de preparación
 
-**READY FOR AUTHORIZED REMOTE PREVIEW**
+**REMOTE PREVIEW VALIDATED / READY FOR EXPLICIT PRODUCTION AUTHORIZATION**
 
-La salida compatible con Workers compila, se ejecuta localmente, conserva
-Sanity `production`, mantiene Vercel operativo, pasa el preflight integral y no
-requiere servicios pagos. Lo siguiente ya no puede adelantarse sin acceso a la
-cuenta: autorizar Wrangler, crear la Workers Preview, configurar sus variables,
-probar la URL remota y medir CPU real frente al límite de 10 ms. Para una
-migración productiva completa también queda decidir una autenticación verificada
-para el panel administrativo. Ninguno de esos puntos exige tocar el catálogo
-público ni los datos de Sanity.
+La salida compatible con Workers compila, conserva Sanity `production`, mantiene
+Vercel operativo, pasa el preflight integral y superó la validación remota de la
+preview. No se configuraron secretos de escritura ni identidad administrativa.
+Para continuar se requiere autorización explícita para una versión productiva
+controlada, medir CPU real con observabilidad y, después, decidir el corte de
+dominio/DNS. También queda elegir una autenticación verificada antes de habilitar
+el panel administrativo en Cloudflare. Ninguno de esos puntos exige modificar el
+catálogo público ni los datos de Sanity.
 

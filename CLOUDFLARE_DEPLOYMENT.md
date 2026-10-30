@@ -103,7 +103,8 @@ aplicación no los necesita para mantener su comportamiento actual.
 ### Nuevos
 
 - `wrangler.jsonc`: entrada del Worker, fecha/flags de compatibilidad y binding
-  de assets; incluye el bloque `previews` requerido para entornos aislados.
+  de assets; habilita URLs temporales e incluye el bloque `previews` requerido
+  para entornos aislados.
 - `scripts/run-cloudflare.mjs`: ejecutor multiplataforma que aísla el modo
   Cloudflare independiente.
 - `.dev.vars.example`: plantilla sin secretos.

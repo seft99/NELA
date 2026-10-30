@@ -3,6 +3,7 @@
   "name": "nela-joyeria",
   "compatibility_date": "2026-05-15",
   "compatibility_flags": ["nodejs_compat"],
+  "preview_urls": true,
   "main": "vinext/server/fetch-handler",
   "assets": {
     "directory": "dist/client",

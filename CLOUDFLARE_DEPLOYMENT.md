@@ -233,6 +233,12 @@ versión de producción. La preview no sustituye la versión activa. Sus variabl
 y secretos no se heredan de producción y deben configurarse en Previews Base o
 en la preview concreta antes de validar el catálogo real.
 
+Las variables públicas de NELA ya están declaradas tanto para producción como
+para previews en `wrangler.jsonc`. No se declara ningún token de escritura ni
+identidad administrativa. Antes de cada preview remota o deploy, el ejecutor
+vuelve a escanear el artefacto y detiene el upload si encuentra un valor privado
+incrustado.
+
 ### Opción B: preview continua con Workers Builds
 
 Estas acciones son deliberadamente manuales y no fueron ejecutadas:

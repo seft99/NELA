@@ -9,5 +9,20 @@
     "not_found_handling": "none",
     "binding": "ASSETS"
   },
-  "previews": {}
+  "vars": {
+    "NEXT_PUBLIC_SITE_URL": "https://nelajoyeria.vercel.app",
+    "NEXT_PUBLIC_SANITY_PROJECT_ID": "0l7ykvj6",
+    "NEXT_PUBLIC_SANITY_DATASET": "production",
+    "SANITY_API_VERSION": "2025-02-19",
+    "NELA_TRUST_CHATGPT_AUTH_HEADERS": "0"
+  },
+  "previews": {
+    "vars": {
+      "NEXT_PUBLIC_SITE_URL": "https://nelajoyeria.vercel.app",
+      "NEXT_PUBLIC_SANITY_PROJECT_ID": "0l7ykvj6",
+      "NEXT_PUBLIC_SANITY_DATASET": "production",
+      "SANITY_API_VERSION": "2025-02-19",
+      "NELA_TRUST_CHATGPT_AUTH_HEADERS": "0"
+    }
+  }
 }

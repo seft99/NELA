@@ -42,6 +42,9 @@ const vinextCli = fileURLToPath(
 const wranglerCli = fileURLToPath(
   new URL("../node_modules/wrangler/bin/wrangler.js", import.meta.url),
 );
+const secretScanScript = fileURLToPath(
+  new URL("./scan-cloudflare-secrets.mjs", import.meta.url),
+);
 
 function runNode(cli, cliArgs) {
   const result = spawnSync(process.execPath, [cli, ...cliArgs], {
@@ -60,6 +63,7 @@ if (command === "check") {
   runNode(vinextCli, ["build", ...args]);
 } else {
   runNode(vinextCli, ["build"]);
+  if (command !== "preview") runNode(secretScanScript, []);
   runNode(wranglerCli, [
     command === "preview"
       ? "dev"

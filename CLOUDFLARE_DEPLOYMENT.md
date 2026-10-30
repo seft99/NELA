@@ -1,8 +1,9 @@
 # Preparación de NELA para Cloudflare Workers
 
-> Estado: **REMOTE PREVIEW VALIDATED / PRODUCTION NOT DEPLOYED**. La rama compila,
-> publica una preview aislada y la valida, pero no activa una versión productiva,
-> no cambia DNS y no modifica el dataset `production` de Sanity.
+> Estado: **PRODUCTION VERSION DEPLOYED / PUBLIC CUTOVER NOT ACTIVATED**. La rama
+> compila, publica y valida una versión productiva controlada, pero no tiene un
+> target público: `workers.dev` permanece deshabilitado, no se añadió un dominio,
+> no se cambió DNS y no se modificó el dataset `production` de Sanity.
 
 ## 1. Estrategia seleccionada
 
@@ -140,14 +141,16 @@ pnpm run verify:cloudflare:preview -- https://<preview>.workers.dev
 pnpm run cf-typegen
 ```
 
-`preview:cloudflare` sirve el artefacto localmente. Cuando exista una sesión de
-Cloudflare autorizada, `preview:cloudflare:remote` publicará una versión aislada
+`preview:cloudflare` sirve el artefacto localmente. Con una sesión de Cloudflare
+autorizada, `preview:cloudflare:remote` publica una versión aislada
 con URL temporal mediante Workers Previews; no crea una versión activa de
 producción. `deploy:cloudflare` está bloqueado por defecto y sólo acepta un
 despliegue de producción si se añade explícitamente `--confirm-production`.
-La preview remota se creó sin activar producción. La ruta productiva
-`nela-joyeria.nela-joyeria.workers.dev` permanece deshabilitada; sólo la URL
-aislada de preview está disponible.
+La preview remota se creó sin activar producción. Posteriormente se publicó una
+versión productiva controlada con autorización explícita. La ruta productiva
+`nela-joyeria.nela-joyeria.workers.dev` permanece deshabilitada y no hay custom
+domain ni ruta DNS asociada; las URLs aisladas/versionadas se conservan sólo
+para validación.
 
 `verify:cloudflare` es un preflight local sin publicación: ejecuta
 compatibilidad, tipos, lint, pruebas funcionales contra el dataset configurado,
@@ -294,18 +297,30 @@ Estas acciones son deliberadamente manuales y no fueron ejecutadas:
 10. Compruebe la URL `workers.dev` con la matriz del apartado siguiente antes
     de añadir un dominio personalizado.
 
-### Activación de producción (deliberadamente bloqueada)
+### Versión productiva controlada (ejecutada sin corte público)
 
-Después de aprobar la preview, medir CPU y confirmar variables, el comando
-local de producción requiere una confirmación explícita:
+Después de aprobar la preview y confirmar variables, el comando local de
+producción requiere una confirmación explícita:
 
 ```bash
 pnpm run deploy:cloudflare -- --confirm-production
 ```
 
-No ejecute este comando mientras Vercel siga siendo la producción aprobada o
-antes de autorizar expresamente el cambio. La protección evita que un simple
-`pnpm run deploy:cloudflare` publique accidentalmente.
+La autorización se recibió el 29 de octubre de 2026 y se creó el deployment
+`8c190f3b-8a47-4d7d-9596-fe62ef7d5d3c`, con la versión
+`ff7389a5-fa82-4053-8fa1-848490da13ae` al 100 %. Cloudflare reportó
+`No targets deployed`: publicar la versión no activó `workers.dev`, custom
+domain ni DNS. Vercel sigue atendiendo la web pública. La protección continúa
+evitando que un simple `pnpm run deploy:cloudflare` publique accidentalmente.
+
+La URL versionada de validación es:
+
+```text
+https://ff7389a5-nela-joyeria.nela-joyeria.workers.dev
+```
+
+El verificador remoto aprobó las mismas 17 comprobaciones sobre esta versión,
+con tiempo HTTP medio aproximado de 466 ms y `X-Robots-Tag: noindex`.
 
 ## 7. Lista de verificación para una preview remota
 
@@ -388,8 +403,9 @@ También aplican las cuotas externas de la API/CDN de Sanity.
 | Tests de inventario/auth | PASS | Incluye rechazo por defecto y opt-in administrado. |
 | Build Vercel/Next.js | PASS | `VERCEL=1 pnpm run build:vercel`. |
 | Build vinext/Cloudflare | PASS | `pnpm run build:cloudflare`. |
-| Wrangler dry-run | PASS | Artefacto generado, 120 módulos runtime, 108 assets. No desplegó. |
+| Wrangler dry-run | PASS | Artefacto generado, 120 módulos runtime, 108 assets. |
 | Workers Preview remota | PASS | Preview aislada creada y accesible; producción `workers.dev` deshabilitada. |
+| Deployment productivo controlado | PASS | Deployment `8c190f3b…`; versión `ff7389a5…` al 100 %, sin targets públicos. |
 | Protección de producción | PASS | `pnpm run deploy:cloudflare` se niega a publicar sin `--confirm-production`. |
 | Escaneo de valores privados | PASS | Dos valores privados locales revisados; ninguno quedó incrustado en módulos/assets del upload. |
 | Preview runtime Workers local | PASS | Wrangler local sirvió la aplicación. |
@@ -410,19 +426,20 @@ También aplican las cuotas externas de la API/CDN de Sanity.
 | Render remoto 1440 px | PASS | Captura de la preview: composición, imágenes y controles renderizaron correctamente. |
 | Resto de anchos solicitados | NOT TESTED | No se capturó cada ancho en navegador real durante esta preparación. |
 | iOS Safari / Android Chrome reales | NOT TESTED | No había dispositivos físicos conectados. |
-| Rendimiento HTTP remoto | PASS | 17 comprobaciones; tiempo de pared medio aproximado de 412 ms. No equivale a CPU. |
-| CPU Free real | NOT TESTED | Preview URLs no admiten Workers Logs, Wrangler tail ni Logpush; requiere una versión productiva controlada y autorización explícita. |
+| Rendimiento HTTP remoto | PASS | Preview: ~412 ms; versión productiva: ~466 ms de pared en 17 comprobaciones. No equivale a CPU. |
+| CPU Free real | NOT TESTED | El deployment no tiene target público; falta tráfico controlado y observabilidad después de autorizar una ruta. |
 
 ## 11. Estado de preparación
 
-**REMOTE PREVIEW VALIDATED / READY FOR EXPLICIT PRODUCTION AUTHORIZATION**
+**PRODUCTION VERSION DEPLOYED / READY FOR SEPARATE CUTOVER AUTHORIZATION**
 
 La salida compatible con Workers compila, conserva Sanity `production`, mantiene
-Vercel operativo, pasa el preflight integral y superó la validación remota de la
-preview. No se configuraron secretos de escritura ni identidad administrativa.
-Para continuar se requiere autorización explícita para una versión productiva
-controlada, medir CPU real con observabilidad y, después, decidir el corte de
-dominio/DNS. También queda elegir una autenticación verificada antes de habilitar
-el panel administrativo en Cloudflare. Ninguno de esos puntos exige modificar el
-catálogo público ni los datos de Sanity.
+Vercel operativo, pasa el preflight integral y superó la validación remota tanto
+de la preview como de la versión productiva controlada. No se configuraron
+secretos de escritura ni identidad administrativa. Para continuar se requiere
+una autorización separada para asignar un dominio/ruta, observar tráfico real y
+medir CPU antes de cualquier corte definitivo. También queda elegir una
+autenticación verificada antes de habilitar el panel administrativo en
+Cloudflare. Ninguno de esos puntos exige modificar el catálogo público ni los
+datos de Sanity.
 

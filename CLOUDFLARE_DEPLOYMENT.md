@@ -1,9 +1,9 @@
 # Preparación de NELA para Cloudflare Workers
 
-> Estado: **PRODUCTION VERSION DEPLOYED / PUBLIC CUTOVER NOT ACTIVATED**. La rama
-> compila, publica y valida una versión productiva controlada, pero no tiene un
-> target público: `workers.dev` permanece deshabilitado, no se añadió un dominio,
-> no se cambió DNS y no se modificó el dataset `production` de Sanity.
+> Estado: **CLOUDFLARE WORKERS PUBLIC ROUTE ACTIVE**. La rama compila, publica y
+> valida una versión productiva disponible en `workers.dev`. La cuenta todavía
+> no contiene una zona de dominio: no se añadió un custom domain, no se cambió
+> DNS, Vercel permanece activo y no se modificó Sanity `production`.
 
 ## 1. Estrategia seleccionada
 
@@ -104,8 +104,11 @@ aplicación no los necesita para mantener su comportamiento actual.
 ### Nuevos
 
 - `wrangler.jsonc`: entrada del Worker, fecha/flags de compatibilidad y binding
-  de assets; desactiva la ruta productiva `workers.dev`, habilita URLs temporales
-  e incluye el bloque `previews` requerido para entornos aislados.
+  de assets; mantiene activa la ruta productiva `workers.dev`, habilita URLs
+  temporales e incluye el bloque `previews` requerido para entornos aislados.
+- `cloudflare-worker.ts`: delega al handler de vinext y añade
+  `X-Robots-Tag: noindex` únicamente a hosts `*.workers.dev`; Vercel y un futuro
+  dominio propio no reciben esa cabecera.
 - `scripts/run-cloudflare.mjs`: ejecutor multiplataforma que aísla el modo
   Cloudflare independiente.
 - `scripts/verify-cloudflare-preview.mjs`: smoke test remoto reutilizable para
@@ -147,10 +150,9 @@ con URL temporal mediante Workers Previews; no crea una versión activa de
 producción. `deploy:cloudflare` está bloqueado por defecto y sólo acepta un
 despliegue de producción si se añade explícitamente `--confirm-production`.
 La preview remota se creó sin activar producción. Posteriormente se publicó una
-versión productiva controlada con autorización explícita. La ruta productiva
-`nela-joyeria.nela-joyeria.workers.dev` permanece deshabilitada y no hay custom
-domain ni ruta DNS asociada; las URLs aisladas/versionadas se conservan sólo
-para validación.
+versión productiva controlada y se habilitó la ruta pública con autorización
+explícita. No hay custom domain ni ruta DNS asociada; Vercel conserva el dominio
+canónico y la ruta `workers.dev` queda protegida con `noindex`.
 
 `verify:cloudflare` es un preflight local sin publicación: ejecuta
 compatibilidad, tipos, lint, pruebas funcionales contra el dataset configurado,
@@ -306,21 +308,25 @@ producción requiere una confirmación explícita:
 pnpm run deploy:cloudflare -- --confirm-production
 ```
 
-La autorización se recibió el 29 de octubre de 2026 y se creó el deployment
-`8c190f3b-8a47-4d7d-9596-fe62ef7d5d3c`, con la versión
-`ff7389a5-fa82-4053-8fa1-848490da13ae` al 100 %. Cloudflare reportó
-`No targets deployed`: publicar la versión no activó `workers.dev`, custom
-domain ni DNS. Vercel sigue atendiendo la web pública. La protección continúa
-evitando que un simple `pnpm run deploy:cloudflare` publique accidentalmente.
+La autorización se recibió el 29 de octubre de 2026. La primera versión
+controlada se publicó sin targets. Al activar `workers.dev`, la validación
+detectó que Cloudflare no añadía `noindex` a la ruta productiva; se aplicó un
+rollback inmediato, se incorporó una protección específica por hostname y se
+publicó una versión corregida. Después de validar la versión aislada se reactivó
+la ruta pública. El estado reproducible final corresponde al deployment
+`7764c730-81bf-4315-a58e-26364fa25c11`, con la versión
+`9820e830-d87d-4406-9f4c-41e3bad58eb3` al 100 %. No se añadió custom domain ni
+se modificó DNS. Vercel sigue atendiendo la web original.
 
 La URL versionada de validación es:
 
 ```text
-https://ff7389a5-nela-joyeria.nela-joyeria.workers.dev
+https://nela-joyeria.nela-joyeria.workers.dev
 ```
 
-El verificador remoto aprobó las mismas 17 comprobaciones sobre esta versión,
-con tiempo HTTP medio aproximado de 466 ms y `X-Robots-Tag: noindex`.
+El verificador remoto aprobó 17 comprobaciones sobre la versión aislada y volvió
+a aprobarlas sobre la ruta pública final (~415 ms de pared), incluida
+`X-Robots-Tag: noindex`.
 
 ## 7. Lista de verificación para una preview remota
 
@@ -404,8 +410,9 @@ También aplican las cuotas externas de la API/CDN de Sanity.
 | Build Vercel/Next.js | PASS | `VERCEL=1 pnpm run build:vercel`. |
 | Build vinext/Cloudflare | PASS | `pnpm run build:cloudflare`. |
 | Wrangler dry-run | PASS | Artefacto generado, 120 módulos runtime, 108 assets. |
-| Workers Preview remota | PASS | Preview aislada creada y accesible; producción `workers.dev` deshabilitada. |
-| Deployment productivo controlado | PASS | Deployment `8c190f3b…`; versión `ff7389a5…` al 100 %, sin targets públicos. |
+| Workers Preview remota | PASS | Preview aislada creada y accesible. |
+| Deployment productivo controlado | PASS | Deployment `7764c730…`; versión `9820e830…` al 100 %. |
+| Ruta pública Workers | PASS | `nela-joyeria.nela-joyeria.workers.dev`; 17/17 comprobaciones y `noindex`. |
 | Protección de producción | PASS | `pnpm run deploy:cloudflare` se niega a publicar sin `--confirm-production`. |
 | Escaneo de valores privados | PASS | Dos valores privados locales revisados; ninguno quedó incrustado en módulos/assets del upload. |
 | Preview runtime Workers local | PASS | Wrangler local sirvió la aplicación. |
@@ -426,20 +433,20 @@ También aplican las cuotas externas de la API/CDN de Sanity.
 | Render remoto 1440 px | PASS | Captura de la preview: composición, imágenes y controles renderizaron correctamente. |
 | Resto de anchos solicitados | NOT TESTED | No se capturó cada ancho en navegador real durante esta preparación. |
 | iOS Safari / Android Chrome reales | NOT TESTED | No había dispositivos físicos conectados. |
-| Rendimiento HTTP remoto | PASS | Preview: ~412 ms; versión productiva: ~466 ms de pared en 17 comprobaciones. No equivale a CPU. |
-| CPU Free real | NOT TESTED | El deployment no tiene target público; falta tráfico controlado y observabilidad después de autorizar una ruta. |
+| Rendimiento HTTP remoto | PASS | Preview inicial: ~412 ms; ruta pública final: ~415 ms en 17 comprobaciones. No equivale a CPU. |
+| CPU Free real | NOT TESTED | La ruta ya está activa, pero falta observar tráfico real en Workers Logs antes de un corte de dominio. |
 
 ## 11. Estado de preparación
 
-**PRODUCTION VERSION DEPLOYED / READY FOR SEPARATE CUTOVER AUTHORIZATION**
+**PUBLIC WORKERS.DEV DEPLOYMENT VALIDATED / CUSTOM DOMAIN NOT CONFIGURED**
 
 La salida compatible con Workers compila, conserva Sanity `production`, mantiene
 Vercel operativo, pasa el preflight integral y superó la validación remota tanto
-de la preview como de la versión productiva controlada. No se configuraron
-secretos de escritura ni identidad administrativa. Para continuar se requiere
-una autorización separada para asignar un dominio/ruta, observar tráfico real y
-medir CPU antes de cualquier corte definitivo. También queda elegir una
-autenticación verificada antes de habilitar el panel administrativo en
-Cloudflare. Ninguno de esos puntos exige modificar el catálogo público ni los
-datos de Sanity.
+de la preview como de la ruta pública. No se configuraron secretos de escritura
+ni identidad administrativa. La cuenta Cloudflare no contiene todavía ninguna
+zona; para usar un dominio propio primero debe añadirse la zona o adquirirse el
+dominio y luego autorizar su asociación/DNS. También queda observar CPU real y
+elegir una autenticación verificada antes de habilitar el panel administrativo.
+Ninguno de esos puntos exige modificar el catálogo público ni los datos de
+Sanity.
 

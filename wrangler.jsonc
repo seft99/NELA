@@ -3,9 +3,9 @@
   "name": "nela-joyeria",
   "compatibility_date": "2026-05-15",
   "compatibility_flags": ["nodejs_compat"],
-  "workers_dev": false,
+  "workers_dev": true,
   "preview_urls": true,
-  "main": "vinext/server/fetch-handler",
+  "main": "./cloudflare-worker.ts",
   "assets": {
     "directory": "dist/client",
     "not_found_handling": "none",

@@ -18,7 +18,6 @@ const standaloneCloudflare =
 
 const localBindingConfig = {
   main: "./build/sites-worker.ts",
-  compatibility_flags: ["nodejs_compat"],
   vars: {
     NELA_TRUST_CHATGPT_AUTH_HEADERS: "1",
   },

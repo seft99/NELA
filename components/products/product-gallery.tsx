@@ -14,21 +14,35 @@ export function ProductGallery({
 }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [zoomOpen, setZoomOpen] = useState(false);
+  const [zoomClosing, setZoomClosing] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const zoomTriggerRef = useRef<HTMLButtonElement>(null);
+  const closeTimerRef = useRef<number | null>(null);
   const active = images[activeIndex] || images[0];
 
   const openZoom = () => {
     const dialog = dialogRef.current;
     if (dialog && !dialog.open) {
       dialog.showModal();
+      setZoomClosing(false);
       setZoomOpen(true);
     }
   };
   const closeZoom = () => {
     const dialog = dialogRef.current;
-    if (dialog?.open) dialog.close();
+    if (!dialog?.open || zoomClosing) return;
+    const animateClose = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!animateClose) {
+      dialog.close();
+      return;
+    }
+    setZoomClosing(true);
+    closeTimerRef.current = window.setTimeout(() => dialog.close(), 220);
   };
+
+  useEffect(() => () => {
+    if (closeTimerRef.current !== null) window.clearTimeout(closeTimerRef.current);
+  }, []);
 
   useEffect(() => {
     if (!zoomOpen) return;
@@ -106,7 +120,7 @@ export function ProductGallery({
       {active ? (
         <dialog
           ref={dialogRef}
-          className="product-lightbox"
+          className={`product-lightbox${zoomClosing ? " is-closing" : ""}`}
           aria-label={`Vista ampliada de ${productName}`}
           onClick={(event) => {
             if (event.target === event.currentTarget) closeZoom();
@@ -116,6 +130,9 @@ export function ProductGallery({
             closeZoom();
           }}
           onClose={() => {
+            if (closeTimerRef.current !== null) window.clearTimeout(closeTimerRef.current);
+            closeTimerRef.current = null;
+            setZoomClosing(false);
             setZoomOpen(false);
             zoomTriggerRef.current?.focus();
           }}

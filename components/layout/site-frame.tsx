@@ -7,6 +7,8 @@ import { Footer } from "./footer";
 import { Header } from "./header";
 import { CartDrawer } from "@/components/cart/cart-drawer";
 import { TopNavigationScrollManager } from "@/components/navigation/top-navigation-link";
+import { DesktopMotionController } from "@/components/motion/desktop-motion-controller";
+import { MobileMotionController } from "@/components/motion/mobile-motion-controller";
 import type { SearchCatalogProduct } from "@/lib/products/search";
 
 export function SiteFrame({
@@ -27,6 +29,8 @@ export function SiteFrame({
   return (
     <>
       <TopNavigationScrollManager />
+      <DesktopMotionController key={pathname} />
+      <MobileMotionController key={`mobile-${pathname}`} />
       <AnnouncementBar />
       <Header productNavigation={productNavigation} searchCatalog={searchCatalog} />
       <main>{children}</main>

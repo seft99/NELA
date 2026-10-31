@@ -17,8 +17,11 @@ export function ProductPurchasePanel({ product }: { product: Product }) {
   const [selections, setSelections] = useState<VariantSelections>({});
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [isValidatingQuantity, setIsValidatingQuantity] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
+  const [added, setAdded] = useState(false);
   const lastConfirmedQuantity = useRef(1);
   const quantityValidationRun = useRef(0);
+  const addedTimerRef = useRef<number | null>(null);
 
   const selectedVariants = useMemo<SelectedVariant[]>(() => (product.variants ?? []).flatMap((variant) => {
     const optionId = selections[variant.id];
@@ -114,9 +117,14 @@ export function ProductPurchasePanel({ product }: { product: Product }) {
   };
 
   const handleAdd = async () => {
+    if (isAdding) return;
+    if (addedTimerRef.current !== null) window.clearTimeout(addedTimerRef.current);
+    setAdded(false);
+    setIsAdding(true);
     const selectionError = (product.variants ?? []).find((variant) => variant.required && !selections[variant.id]);
     if (selectionError) {
       setFeedback({ type: "error", message: `Selecciona ${selectionError.name.toLocaleLowerCase("es")}.` });
+      setIsAdding(false);
       return;
     }
     try {
@@ -125,17 +133,31 @@ export function ProductPurchasePanel({ product }: { product: Product }) {
       ]);
       if (!validation.valid) {
         setFeedback({ type: "error", message: validation.issues[0]?.message ?? "El producto ya no está disponible." });
+        setIsAdding(false);
         return;
       }
     } catch (error) {
       setFeedback({ type: "error", message: error instanceof Error ? error.message : "No fue posible confirmar las existencias." });
+      setIsAdding(false);
       return;
     }
     const result = addProduct(product, { quantity, selectedVariants });
     setFeedback(result.ok
       ? { type: "success", message: `${product.name} se agregó al carrito.` }
       : { type: "error", message: result.message });
+    setAdded(result.ok);
+    setIsAdding(false);
+    if (result.ok) {
+      addedTimerRef.current = window.setTimeout(() => {
+        setAdded(false);
+        addedTimerRef.current = null;
+      }, 1_800);
+    }
   };
+
+  useEffect(() => () => {
+    if (addedTimerRef.current !== null) window.clearTimeout(addedTimerRef.current);
+  }, []);
 
   if (!isProductPurchasable(product)) {
     return <span className="button button-disabled">Producto no disponible</span>;
@@ -177,8 +199,14 @@ export function ProductPurchasePanel({ product }: { product: Product }) {
         />
       </div>
       <div className="purchase-actions">
-        <button className="button button-outline purchase-add-button" type="button" onClick={() => void handleAdd()}>
-          <ShoppingBag size={17} aria-hidden="true" /> Agregar al carrito
+        <button
+          className={`button button-outline purchase-add-button${added ? " is-added" : ""}`}
+          type="button"
+          disabled={isAdding}
+          onClick={() => void handleAdd()}
+        >
+          {added ? <Check size={17} aria-hidden="true" /> : <ShoppingBag size={17} aria-hidden="true" />}
+          {isAdding ? "Confirmando…" : added ? "Agregado" : "Agregar al carrito"}
         </button>
         <BuyNowButton
           product={product}

@@ -69,6 +69,7 @@ export function StoreImageCarousel({
   variant = "default",
   autoplayInterval = AUTOPLAY_INTERVAL,
   mobileTapNavigation = false,
+  desktopEditorialMotion = false,
 }: {
   slides?: readonly StoreCarouselSlide[];
   ariaLabel?: string;
@@ -77,6 +78,7 @@ export function StoreImageCarousel({
   variant?: "default" | "editorial";
   autoplayInterval?: number;
   mobileTapNavigation?: boolean;
+  desktopEditorialMotion?: boolean;
 }) {
   const activeSlides = slides.length > 0 ? slides : defaultStoreCarouselSlides;
   const hasMultipleSlides = activeSlides.length > 1;
@@ -103,6 +105,9 @@ export function StoreImageCarousel({
     const updatePreferences = () => {
       setMotionBlocked(motionQuery.matches);
       setSmallScreen(screenQuery.matches);
+      if (!screenQuery.matches && desktopEditorialMotion) {
+        setLoadedIndexes(activeSlides.map((_, index) => index));
+      }
     };
     updatePreferences();
     motionQuery.addEventListener("change", updatePreferences);
@@ -111,7 +116,7 @@ export function StoreImageCarousel({
       motionQuery.removeEventListener("change", updatePreferences);
       screenQuery.removeEventListener("change", updatePreferences);
     };
-  }, []);
+  }, [activeSlides, desktopEditorialMotion]);
 
   useEffect(() => () => {
     if (suppressClickTimer.current !== null) window.clearTimeout(suppressClickTimer.current);
@@ -231,7 +236,8 @@ export function StoreImageCarousel({
 
   return (
     <div
-      className={`silver-carousel${variant === "editorial" ? " silver-carousel--editorial" : ""}`}
+      className={`silver-carousel${variant === "editorial" ? " silver-carousel--editorial" : ""}${desktopEditorialMotion ? " silver-carousel--desktop-motion" : ""}${!autoplayPaused ? " is-autoplaying" : ""}`}
+      style={{ "--nela-carousel-duration": `${autoplayInterval}ms` } as React.CSSProperties}
       role="region"
       aria-roledescription="carrusel"
       aria-label={ariaLabel}
@@ -337,7 +343,11 @@ export function StoreImageCarousel({
                   activateSlide(index);
                 }}
                 key={slide.src}
-              />
+              >
+                {desktopEditorialMotion && index === displayedIndex && !autoplayPaused ? (
+                  <span className="silver-carousel-progress" key={displayedIndex} aria-hidden="true" />
+                ) : null}
+              </button>
             ))}
           </div>
         </>

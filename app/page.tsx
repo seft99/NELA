@@ -46,6 +46,7 @@ export default async function HomePage() {
             <StoreImageCarousel
               ariaLabel="Selección editorial NELA Joyería"
               priority
+              desktopEditorialMotion
               signatureLines={["Belleza", "en cada", "historia"]}
               mobileTapNavigation
             />

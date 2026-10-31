@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Check, ShoppingBag } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/hooks/use-cart";
 import type { Product } from "@/types/product";
 import { isProductPurchasable } from "@/lib/products/inventory";
@@ -21,6 +21,7 @@ export function AddToCartButton({
   const [added, setAdded] = useState(false);
   const [checking, setChecking] = useState(false);
   const [blocked, setBlocked] = useState(false);
+  const feedbackTimerRef = useRef<number | null>(null);
   const hasRequiredVariants = product.variants?.some((variant) => variant.required) ?? false;
   const className = `product-add-button${compact ? " product-add-button--compact" : ""}${mobileCompact ? " product-button--mobile-compact" : ""}`;
   const defaultLabel = compact
@@ -33,6 +34,10 @@ export function AddToCartButton({
           </>
         )
       : "Agregar al carrito";
+
+  useEffect(() => () => {
+    if (feedbackTimerRef.current !== null) window.clearTimeout(feedbackTimerRef.current);
+  }, []);
 
   if (!isProductPurchasable(product)) {
     return (
@@ -72,6 +77,8 @@ export function AddToCartButton({
       title={mobileCompact ? "Agregar al carrito" : undefined}
       aria-label={mobileCompact ? `Agregar al carrito: ${product.name}` : `Agregar ${product.name} al carrito`}
       onClick={async () => {
+        if (feedbackTimerRef.current !== null) window.clearTimeout(feedbackTimerRef.current);
+        setAdded(false);
         setChecking(true);
         setBlocked(false);
         try {
@@ -83,6 +90,12 @@ export function AddToCartButton({
           const result = addProduct(product);
           setAdded(result.ok);
           setBlocked(!result.ok);
+          if (result.ok) {
+            feedbackTimerRef.current = window.setTimeout(() => {
+              setAdded(false);
+              feedbackTimerRef.current = null;
+            }, 1_800);
+          }
         } catch {
           setBlocked(true);
         } finally {
@@ -96,7 +109,7 @@ export function AddToCartButton({
         : blocked
           ? "No disponible"
           : added
-            ? "Añadido"
+            ? "Agregado"
             : defaultLabel}
     </button>
   );

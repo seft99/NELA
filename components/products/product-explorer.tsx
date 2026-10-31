@@ -315,6 +315,10 @@ export function ProductExplorer({
     () => sortCatalogProducts(filterCatalogProducts(products, filters), sort),
     [filters, products, sort],
   );
+  const resultsTransitionKey = useMemo(
+    () => JSON.stringify({ filters, sort }),
+    [filters, sort],
+  );
 
   const setSingleFilter = (key: ArrayFilterKey, value: string) => {
     setFilters((current) => ({ ...current, [key]: value ? [value] : [] }));
@@ -785,9 +789,9 @@ export function ProductExplorer({
         ) : null}
       </div>
       {visibleProducts.length ? (
-        <CatalogProductGrid products={visibleProducts} context={context} />
+        <CatalogProductGrid key={resultsTransitionKey} products={visibleProducts} context={context} />
       ) : (
-        <div className="empty-state compact">
+        <div className="empty-state compact catalog-results-empty" key={resultsTransitionKey}>
           <h2>{products.length === 0 ? "Catálogo temporalmente no disponible." : "No encontramos coincidencias."}</h2>
           <p>{products.length === 0 ? "Estamos actualizando la colección. Intenta nuevamente más tarde o escríbenos por WhatsApp." : "Prueba otra búsqueda o cambia los filtros aplicados."}</p>
           {activeChips.length ? <button className="text-link empty-reset" type="button" onClick={clearFilters}>Limpiar filtros</button> : null}

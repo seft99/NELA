@@ -109,6 +109,7 @@ export function ProductDetailTabs({ product }: { product: Product }) {
           ))}
         </div>
         <div
+          key={active.id}
           id={`${baseId}-panel-${active.id}`}
           className="product-tab-panel"
           role="tabpanel"
@@ -139,12 +140,15 @@ export function ProductDetailTabs({ product }: { product: Product }) {
               </h3>
               <div
                 id={`${baseId}-accordion-panel-${tab.id}`}
-                className="product-detail-accordion-panel"
+                className={`product-detail-accordion-panel${expanded ? " is-expanded" : ""}`}
                 role="region"
                 aria-labelledby={`${baseId}-accordion-${tab.id}`}
-                hidden={!expanded}
+                aria-hidden={!expanded}
+                inert={!expanded}
               >
-                <div className="product-tab-panel">{tab.content}</div>
+                <div className="product-detail-accordion-panel-inner">
+                  <div className="product-tab-panel">{tab.content}</div>
+                </div>
               </div>
             </section>
           );

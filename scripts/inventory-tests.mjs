@@ -18,6 +18,7 @@ try {
   const access = await server.ssrLoadModule("/lib/inventory/access.ts");
   const validation = await server.ssrLoadModule("/lib/inventory/validation.ts");
   const auth = await server.ssrLoadModule("/app/chatgpt-auth.ts");
+  const adminAuth = await server.ssrLoadModule("/app/admin-auth.ts");
 
   const product = {
     id: "inventory-test",
@@ -59,6 +60,88 @@ try {
     { userId: "user-1", email: "OWNER@EXAMPLE.COM" },
     { emails: "owner@example.com", userIds: "" },
   ), true);
+
+  const previousAccessEnabled = process.env.NELA_CLOUDFLARE_ACCESS_ENABLED;
+  const previousAccessTeamDomain = process.env.CLOUDFLARE_ACCESS_TEAM_DOMAIN;
+  const previousAccessAudience = process.env.CLOUDFLARE_ACCESS_AUDIENCE;
+  process.env.NELA_CLOUDFLARE_ACCESS_ENABLED = "1";
+  process.env.CLOUDFLARE_ACCESS_TEAM_DOMAIN = "team.cloudflareaccess.com";
+  process.env.CLOUDFLARE_ACCESS_AUDIENCE = "audience-test";
+  assert.equal(
+    adminAuth.cloudflareAccessAuthAvailable(),
+    true,
+    "Cloudflare Access must be enabled only with a complete configuration.",
+  );
+
+  const jwtKeyPair = await crypto.subtle.generateKey(
+    {
+      name: "RSASSA-PKCS1-v1_5",
+      modulusLength: 2048,
+      publicExponent: new Uint8Array([1, 0, 1]),
+      hash: "SHA-256",
+    },
+    true,
+    ["sign", "verify"],
+  );
+  const publicJwk = await crypto.subtle.exportKey("jwk", jwtKeyPair.publicKey);
+  publicJwk.kid = "inventory-test-key";
+  const nowSeconds = 1_800_000_000;
+  const encodeJwtPart = (value) => Buffer.from(JSON.stringify(value)).toString("base64url");
+  const signJwt = async (payload) => {
+    const header = encodeJwtPart({ alg: "RS256", kid: publicJwk.kid, typ: "JWT" });
+    const body = encodeJwtPart(payload);
+    const signedValue = `${header}.${body}`;
+    const signature = await crypto.subtle.sign(
+      "RSASSA-PKCS1-v1_5",
+      jwtKeyPair.privateKey,
+      new TextEncoder().encode(signedValue),
+    );
+    return `${signedValue}.${Buffer.from(signature).toString("base64url")}`;
+  };
+  const validPayload = {
+    aud: ["audience-test"],
+    email: "OWNER@EXAMPLE.COM",
+    exp: nowSeconds + 300,
+    iss: "https://team.cloudflareaccess.com",
+    name: "NELA Admin",
+    sub: "access-user-1",
+  };
+  const fetchJwks = async () => new Response(JSON.stringify({ keys: [publicJwk] }), {
+    status: 200,
+    headers: { "content-type": "application/json" },
+  });
+  assert.deepEqual(
+    await adminAuth.verifyCloudflareAccessJwt(
+      await signJwt(validPayload),
+      { audiences: ["audience-test"], teamDomain: "team.cloudflareaccess.com" },
+      { fetchImpl: fetchJwks, nowSeconds },
+    ),
+    { email: "owner@example.com", name: "NELA Admin", sub: "access-user-1" },
+  );
+  assert.equal(
+    await adminAuth.verifyCloudflareAccessJwt(
+      await signJwt({ ...validPayload, aud: ["wrong-audience"] }),
+      { audiences: ["audience-test"], teamDomain: "team.cloudflareaccess.com" },
+      { fetchImpl: fetchJwks, nowSeconds },
+    ),
+    null,
+    "A token issued for another Access application must be rejected.",
+  );
+  assert.equal(
+    await adminAuth.verifyCloudflareAccessJwt(
+      await signJwt({ ...validPayload, exp: nowSeconds - 120 }),
+      { audiences: ["audience-test"], teamDomain: "team.cloudflareaccess.com" },
+      { fetchImpl: fetchJwks, nowSeconds },
+    ),
+    null,
+    "Expired Access tokens must be rejected.",
+  );
+  if (previousAccessEnabled === undefined) delete process.env.NELA_CLOUDFLARE_ACCESS_ENABLED;
+  else process.env.NELA_CLOUDFLARE_ACCESS_ENABLED = previousAccessEnabled;
+  if (previousAccessTeamDomain === undefined) delete process.env.CLOUDFLARE_ACCESS_TEAM_DOMAIN;
+  else process.env.CLOUDFLARE_ACCESS_TEAM_DOMAIN = previousAccessTeamDomain;
+  if (previousAccessAudience === undefined) delete process.env.CLOUDFLARE_ACCESS_AUDIENCE;
+  else process.env.CLOUDFLARE_ACCESS_AUDIENCE = previousAccessAudience;
 
   const previousVercel = process.env.VERCEL;
   const previousHeaderTrust = process.env.NELA_TRUST_CHATGPT_AUTH_HEADERS;
@@ -112,7 +195,7 @@ try {
     headers: { origin: "https://nela.example", "sec-fetch-site": "cross-site" },
   })), false);
 
-  console.log("Inventory tests passed: access, Vercel auth guard, validation, stock rules and variant limits.");
+  console.log("Inventory tests passed: Cloudflare Access JWT, auth guards, validation, stock rules and variant limits.");
 } finally {
   await server.close();
 }

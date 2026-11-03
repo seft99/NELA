@@ -1,4 +1,4 @@
-import { getChatGPTUser } from "@/app/chatgpt-auth";
+import { getAdminUser } from "@/app/admin-auth";
 import { inventoryAdminConfigured, isInventoryAdmin } from "@/lib/inventory/access";
 import {
   listInventoryProducts,
@@ -21,7 +21,7 @@ function json(data: unknown, status = 200) {
 }
 
 async function authorize() {
-  const user = await getChatGPTUser();
+  const user = await getAdminUser();
   if (!user) return { error: json({ error: "Debes iniciar sesión para continuar." }, 401) };
   if (!inventoryAdminConfigured() || !isInventoryAdmin(user)) {
     return { error: json({ error: "Tu cuenta no tiene permiso para administrar el inventario." }, 403) };

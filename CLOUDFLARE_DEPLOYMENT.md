@@ -186,9 +186,12 @@ exponer valores en Git.
 | `SANITY_API_VERSION` | runtime | recomendable | Actualmente `2025-02-19`. |
 | `NEXT_PUBLIC_SITE_URL` | pública, build y runtime | sí | Canonical de producción. No use `workers.dev` mientras sea sólo preview. |
 | `NELA_TRUST_CHATGPT_AUTH_HEADERS` | runtime | no | Omitir o usar `0` en Cloudflare público. |
-| `INVENTORY_ADMIN_EMAILS` | secreto/runtime | no en preview | Sólo sirve si existe autenticación verificada. |
+| `NELA_CLOUDFLARE_ACCESS_ENABLED` | secreto/runtime | sí para el panel | Use `1` sólo después de proteger las rutas administrativas con Access. |
+| `CLOUDFLARE_ACCESS_TEAM_DOMAIN` | secreto/runtime | sí para el panel | Dominio del equipo, por ejemplo `equipo.cloudflareaccess.com`. |
+| `CLOUDFLARE_ACCESS_AUDIENCE` | secreto/runtime | sí para el panel | Audience (`AUD`) de la aplicación Self-hosted. |
+| `INVENTORY_ADMIN_EMAILS` | secreto/runtime | sí para el panel | Lista adicional de cuentas que la aplicación autoriza a administrar. |
 | `INVENTORY_ADMIN_USER_IDS` | secreto/runtime | no en preview | Igual que el anterior. |
-| `SANITY_API_WRITE_TOKEN` | secreto/runtime | no para catálogo | Sólo panel administrativo; no debe configurarse en una preview pública sin autenticación. |
+| `SANITY_API_WRITE_TOKEN` | secreto/runtime | sí para el panel | Token de escritura servidor; nunca se entrega al navegador. |
 
 Las variables `SANITY_MIGRATION_DATASET`,
 `NELA_SANITY_MIGRATION_TEST_API_BASE_URL` y
@@ -199,11 +202,24 @@ deployment.
 ### Límite de seguridad del panel administrativo
 
 ChatGPT Sites protege las cabeceras `oai-authenticated-user-*`; un Worker
-público no. Por eso el modo Cloudflare deja deshabilitado el panel de
-inventario de forma segura. No defina `NELA_TRUST_CHATGPT_AUTH_HEADERS=1` en un
-host público. Antes de habilitar el panel se debe implementar y verificar una
-autenticación propia o un proxy de confianza. El catálogo público sigue siendo
-completamente funcional y de sólo lectura.
+público no. Por eso `NELA_TRUST_CHATGPT_AUTH_HEADERS` debe continuar en `0`.
+En Cloudflare, `/admin/*` y `/api/admin/*` se protegen mediante una aplicación
+Access Self-hosted. El servidor valida criptográficamente
+`Cf-Access-Jwt-Assertion` contra el JWKS del equipo, su emisor, audiencia,
+vigencia e identidad; la lista `INVENTORY_ADMIN_EMAILS` añade un segundo límite
+de autorización dentro de la aplicación.
+
+Configuración requerida en Zero Trust:
+
+1. Destinos `nela-joyeria.nela-joyeria.workers.dev/admin/*` y
+   `nela-joyeria.nela-joyeria.workers.dev/api/admin/*`.
+2. Política `Allow` limitada al correo administrativo de NELA.
+3. Copiar el `AUD` de la aplicación y el dominio del equipo a los secretos del
+   Worker.
+4. Mantener el token de Sanity únicamente como secreto de Worker.
+
+Sin los tres valores completos de Access, la aplicación conserva el panel
+deshabilitado de forma segura.
 
 ## 5. Desarrollo, build y preview local
 
@@ -456,11 +472,12 @@ También aplican las cuotas externas de la API/CDN de Sanity.
 
 La salida compatible con Workers compila, conserva Sanity `production`, mantiene
 Vercel operativo, pasa el preflight integral y superó la validación remota tanto
-de la preview como de la ruta pública. No se configuraron secretos de escritura
-ni identidad administrativa. La cuenta Cloudflare no contiene todavía ninguna
-zona; para usar un dominio propio primero debe añadirse la zona o adquirirse el
-dominio y luego autorizar su asociación/DNS. También queda observar CPU real y
-elegir una autenticación verificada antes de habilitar el panel administrativo.
-Ninguno de esos puntos exige modificar el catálogo público ni los datos de
-Sanity.
+de la preview como de la ruta pública. El panel administrativo dispone ahora de
+integración con Cloudflare Access y validación JWT; su activación productiva
+requiere completar la aplicación Self-hosted, configurar sus secretos y validar
+el inicio de sesión. La cuenta Cloudflare no contiene todavía ninguna zona; para
+usar un dominio propio primero debe añadirse la zona o adquirirse el dominio y
+luego autorizar su asociación/DNS. También queda observar CPU real antes de un
+corte de dominio. Ninguno de esos puntos exige modificar el catálogo público ni
+los datos de Sanity.
 

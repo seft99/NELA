@@ -106,20 +106,28 @@ for (const [pathname, expectedFragment] of [
 }
 
 {
-  const { response, body, durationMs } = await request("/admin/inventario");
+  const { response, body, durationMs } = await request("/admin/inventario", { redirect: "manual" });
+  const accessRedirect = response.status >= 300 && response.status < 400 &&
+    response.headers.get("location")?.includes("cloudflareaccess.com");
   const restricted = normalize(body).includes("acceso restringido") &&
     normalize(body).includes("no esta habilitado en este alojamiento");
   results.push({
     check: "panel administrativo",
     status: response.status,
     durationMs,
-    passed: response.status === 200 && restricted,
-    detail: restricted ? "Acceso restringido" : "La restricción no fue reconocida",
+    passed: Boolean(accessRedirect) || (response.status === 200 && restricted),
+    detail: accessRedirect
+      ? "Protegido por Cloudflare Access"
+      : restricted
+        ? "Acceso restringido por la aplicación"
+        : "La restricción no fue reconocida",
   });
 }
 
 {
-  const { response, body, durationMs } = await request("/api/admin/inventory");
+  const { response, body, durationMs } = await request("/api/admin/inventory", { redirect: "manual" });
+  const accessRedirect = response.status >= 300 && response.status < 400 &&
+    response.headers.get("location")?.includes("cloudflareaccess.com");
   let errorMessage = body;
   try {
     errorMessage = JSON.parse(body).error ?? body;
@@ -131,8 +139,10 @@ for (const [pathname, expectedFragment] of [
     check: "API administrativa",
     status: response.status,
     durationMs,
-    passed: response.status === 401,
-    detail: String(errorMessage).slice(0, 120),
+    passed: Boolean(accessRedirect) || response.status === 401,
+    detail: accessRedirect
+      ? "Protegida por Cloudflare Access"
+      : String(errorMessage).slice(0, 120),
   });
 }
 

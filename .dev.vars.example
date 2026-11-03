@@ -5,9 +5,12 @@ NEXT_PUBLIC_SANITY_PROJECT_ID=0l7ykvj6
 NEXT_PUBLIC_SANITY_DATASET=production
 SANITY_API_VERSION=2025-02-19
 NELA_TRUST_CHATGPT_AUTH_HEADERS=0
+NELA_CLOUDFLARE_ACCESS_ENABLED=0
+CLOUDFLARE_ACCESS_TEAM_DOMAIN=
+CLOUDFLARE_ACCESS_AUDIENCE=
 
-# El panel administrativo queda deshabilitado en Cloudflare hasta integrar una
-# identidad confiable. Configurar estos secretos no sustituye autenticación.
+# El panel administrativo requiere una aplicación Cloudflare Access que proteja
+# /admin/* y /api/admin/*. Active la integración sólo después de crearla.
 SANITY_API_WRITE_TOKEN=
 INVENTORY_ADMIN_EMAILS=
 INVENTORY_ADMIN_USER_IDS=

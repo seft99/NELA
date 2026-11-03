@@ -1,4 +1,4 @@
-import type { ChatGPTUser } from "@/app/chatgpt-auth";
+import type { AdminUser } from "@/app/admin-auth";
 
 function parseAllowlist(value: string | undefined, normalize: (item: string) => string) {
   return new Set(
@@ -14,7 +14,7 @@ export function inventoryAdminConfigured() {
 }
 
 export function isInventoryAdmin(
-  user: Pick<ChatGPTUser, "userId" | "email">,
+  user: Pick<AdminUser, "userId" | "email">,
   configuration: { emails?: string; userIds?: string } = {
     emails: process.env.INVENTORY_ADMIN_EMAILS,
     userIds: process.env.INVENTORY_ADMIN_USER_IDS,

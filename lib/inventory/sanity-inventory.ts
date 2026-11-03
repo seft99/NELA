@@ -46,6 +46,8 @@ const inventoryQuery = `*[_type == "product" && category == "accesorios-plata" &
   name,
   reference,
   category,
+  "jewelryType": catalogAttributes.jewelryType,
+  "image": images[0]{"src": asset->url, alt},
   "stock": coalesce(stock, inventoryQuantity, 0),
   "purchaseEnabled": coalesce(purchaseEnabled, available, false),
   "visible": coalesce(visible, false),
@@ -62,6 +64,9 @@ export async function listInventoryProducts(): Promise<InventoryProduct[]> {
   const payload = await sanityRequest(`query/${config.dataset}?query=${encodeURIComponent(inventoryQuery)}`) as { result?: InventoryProduct[] };
   return (payload.result ?? []).map((product) => ({
     ...product,
+    image: product.image?.src
+      ? { src: product.image.src, alt: product.image.alt?.trim() || product.name }
+      : undefined,
     stock: normalizeStock(product.stock),
     purchaseEnabled: Boolean(product.purchaseEnabled),
     visible: Boolean(product.visible),

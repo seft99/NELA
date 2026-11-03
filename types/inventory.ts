@@ -1,4 +1,4 @@
-import type { CategorySlug } from "@/types/product";
+import type { CategorySlug, JewelryType } from "@/types/product";
 
 export type InventoryVariantLine = {
   id: string;
@@ -13,6 +13,11 @@ export type InventoryProduct = {
   name: string;
   reference?: string;
   category: CategorySlug;
+  jewelryType?: JewelryType;
+  image?: {
+    src: string;
+    alt: string;
+  };
   stock: number;
   purchaseEnabled: boolean;
   visible: boolean;

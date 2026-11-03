@@ -78,6 +78,7 @@ export function InventoryDashboard({ ownerName, signOutPath }: { ownerName: stri
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const [expandedProductId, setExpandedProductId] = useState<string | null>(null);
   const typeMenuRef = useRef<HTMLDetailsElement>(null);
 
   const replaceInventory = (nextProducts: InventoryProduct[]) => {
@@ -128,6 +129,14 @@ export function InventoryDashboard({ ownerName, signOutPath }: { ownerName: stri
     return () => window.removeEventListener("beforeunload", warnBeforeLeaving);
   }, [hasDirtyProducts]);
 
+  useEffect(() => {
+    if (feedback?.type !== "success") return;
+    const timer = window.setTimeout(() => {
+      setFeedback((current) => current === feedback ? null : current);
+    }, 4200);
+    return () => window.clearTimeout(timer);
+  }, [feedback]);
+
   const availableTypes = useMemo(() => Array.from(new Set(
     products.map((product) => product.jewelryType).filter((value): value is JewelryType => Boolean(value)),
   )).sort((a, b) => JEWELRY_TYPE_NAMES[a].localeCompare(JEWELRY_TYPE_NAMES[b], "es")), [products]);
@@ -160,7 +169,7 @@ export function InventoryDashboard({ ownerName, signOutPath }: { ownerName: stri
 
   const updateDraft = (productId: string, update: (current: InventoryProduct) => InventoryProduct) => {
     setDrafts((current) => ({ ...current, [productId]: update(current[productId]) }));
-    setFeedback((current) => current?.productId === productId ? null : current);
+    setFeedback((current) => current?.type === "success" || current?.productId === productId ? null : current);
   };
 
   const resetProduct = (productId: string) => {
@@ -215,7 +224,8 @@ export function InventoryDashboard({ ownerName, signOutPath }: { ownerName: stri
         <div className="inventory-heading-copy">
           <p className="eyebrow">Panel privado</p>
           <h1 id="inventory-title">Inventario NELA</h1>
-          <p>Actualiza precios y existencias, y decide qué productos se pueden comprar o ver en la tienda.</p>
+          <p className="inventory-description inventory-description-desktop">Actualiza precios y existencias, y decide qué productos se pueden comprar o ver en la tienda.</p>
+          <p className="inventory-description inventory-description-mobile">Gestiona precios, existencias y visibilidad de tus productos.</p>
           <p className="inventory-session">Sesión activa: <strong>{ownerName}</strong></p>
         </div>
         <div className="inventory-header-actions">
@@ -236,7 +246,7 @@ export function InventoryDashboard({ ownerName, signOutPath }: { ownerName: stri
       </details>
 
       <div className="inventory-overview" aria-label="Resumen y filtros del inventario">
-        <StatusFilterButton active={statusFilter === "all"} label="Todos" value={stats.all} icon={<SlidersHorizontal />} onClick={() => setStatusFilter("all")} />
+        <StatusFilterButton active={statusFilter === "all"} primary label="Todos" value={stats.all} icon={<SlidersHorizontal />} onClick={() => setStatusFilter("all")} />
         <StatusFilterButton active={statusFilter === "available"} label="Disponibles" value={stats.available} icon={<PackageCheck />} onClick={() => setStatusFilter("available")} />
         <StatusFilterButton active={statusFilter === "out-of-stock"} label="Agotados" value={stats["out-of-stock"]} icon={<PackageX />} onClick={() => setStatusFilter("out-of-stock")} />
         <StatusFilterButton active={statusFilter === "paused"} label="Compra pausada" value={stats.paused} icon={<PauseCircle />} onClick={() => setStatusFilter("paused")} />
@@ -323,8 +333,10 @@ export function InventoryDashboard({ ownerName, signOutPath }: { ownerName: stri
           const hasChanges = dirtyIds.has(product.id);
           const status = productStatus(draft);
           const productFeedback = feedback?.productId === product.id ? feedback : null;
+          const isExpanded = expandedProductId === product.id;
+          const editorId = `inventory-editor-${product.id.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
           return (
-            <article className={`inventory-card${hasChanges ? " has-changes" : ""}`} key={product.id}>
+            <article className={`inventory-card${hasChanges ? " has-changes" : ""}${isExpanded ? " is-expanded" : ""}`} key={product.id}>
               <div className="inventory-card-heading">
                 {draft.image ? (
                   <div className="inventory-product-image">
@@ -341,74 +353,95 @@ export function InventoryDashboard({ ownerName, signOutPath }: { ownerName: stri
                 </div>
               </div>
 
-              <div className="inventory-price-block">
-                <span><strong>Precio</strong><small>Valor publicado en la tienda</small></span>
-                <PriceControl
-                  value={draft.price}
-                  label={`Precio de ${draft.name}`}
-                  onChange={(price) => updateDraft(draft.id, (current) => ({ ...current, price }))}
-                />
+              <div className="inventory-card-mobile-meta" aria-hidden="true">
+                <span><small>Precio</small><strong>$ {inventoryPriceFormatter.format(draft.price)}</strong></span>
+                <span><small>Existencias</small><strong>{draft.stock}</strong></span>
               </div>
 
-              {hasVariants ? (
-                <fieldset className="inventory-variants">
-                  <legend>Existencias por variante</legend>
-                  {draft.variantInventory.map((line) => (
-                    <div className="inventory-stock-row" key={line.id}>
-                      <span>{line.label}</span>
+              <button
+                className="inventory-card-toggle"
+                type="button"
+                aria-expanded={isExpanded}
+                aria-controls={editorId}
+                onClick={() => setExpandedProductId((current) => current === product.id ? null : product.id)}
+              >
+                <span>{isExpanded ? "Cerrar edición" : "Editar producto"}</span>
+                <ChevronDown size={18} aria-hidden="true" />
+              </button>
+
+              <div className="inventory-card-editor" id={editorId}>
+                <div className="inventory-card-editor-inner">
+
+                  <div className="inventory-price-block">
+                    <span><strong>Precio</strong><small>Valor publicado en la tienda</small></span>
+                    <PriceControl
+                      value={draft.price}
+                      label={`Precio de ${draft.name}`}
+                      onChange={(price) => updateDraft(draft.id, (current) => ({ ...current, price }))}
+                    />
+                  </div>
+
+                  {hasVariants ? (
+                    <fieldset className="inventory-variants">
+                      <legend>Existencias por variante</legend>
+                      {draft.variantInventory.map((line) => (
+                        <div className="inventory-stock-row" key={line.id}>
+                          <span>{line.label}</span>
+                          <StockControl
+                            value={line.stock}
+                            label={`Existencias de ${draft.name}, ${line.label}`}
+                            onChange={(stock) => updateDraft(draft.id, (current) => {
+                              const variantInventory = current.variantInventory.map((item) => item.id === line.id ? { ...item, stock } : item);
+                              return { ...current, variantInventory, stock: variantInventory.reduce((total, item) => total + item.stock, 0) };
+                            })}
+                          />
+                        </div>
+                      ))}
+                      <p className="inventory-total">Total disponible: <strong>{draft.stock}</strong></p>
+                    </fieldset>
+                  ) : (
+                    <div className="inventory-stock-block">
+                      <span><strong>Existencias</strong><small>Unidades disponibles para vender</small></span>
                       <StockControl
-                        value={line.stock}
-                        label={`Existencias de ${draft.name}, ${line.label}`}
-                        onChange={(stock) => updateDraft(draft.id, (current) => {
-                          const variantInventory = current.variantInventory.map((item) => item.id === line.id ? { ...item, stock } : item);
-                          return { ...current, variantInventory, stock: variantInventory.reduce((total, item) => total + item.stock, 0) };
-                        })}
+                        value={draft.stock}
+                        label={`Existencias de ${draft.name}`}
+                        onChange={(stock) => updateDraft(draft.id, (current) => ({ ...current, stock }))}
                       />
                     </div>
-                  ))}
-                  <p className="inventory-total">Total disponible: <strong>{draft.stock}</strong></p>
-                </fieldset>
-              ) : (
-                <div className="inventory-stock-block">
-                  <span><strong>Existencias</strong><small>Unidades disponibles para vender</small></span>
-                  <StockControl
-                    value={draft.stock}
-                    label={`Existencias de ${draft.name}`}
-                    onChange={(stock) => updateDraft(draft.id, (current) => ({ ...current, stock }))}
-                  />
+                  )}
+
+                  <div className="inventory-toggles">
+                    <label>
+                      <input
+                        type="checkbox"
+                        role="switch"
+                        checked={draft.purchaseEnabled}
+                        onChange={(event) => updateDraft(draft.id, (current) => ({ ...current, purchaseEnabled: event.target.checked }))}
+                      />
+                      <span><strong>Permitir compras</strong><small>{draft.purchaseEnabled ? "Los clientes pueden pedir este producto." : "Las compras están pausadas temporalmente."}</small></span>
+                    </label>
+                    <label>
+                      <input
+                        type="checkbox"
+                        role="switch"
+                        checked={draft.visible}
+                        onChange={(event) => updateDraft(draft.id, (current) => ({ ...current, visible: event.target.checked }))}
+                      />
+                      <span><strong>Mostrar en el catálogo</strong><small>{draft.visible ? "El producto aparece en la tienda." : "Está oculto, pero no fue eliminado."}</small></span>
+                    </label>
+                  </div>
+
+                  <div className="inventory-card-actions">
+                    <button className="button button-outline inventory-reset" type="button" onClick={() => resetProduct(draft.id)} disabled={!hasChanges || savingId === draft.id} aria-label={`Descartar cambios de ${draft.name}`}>
+                      <RotateCcw size={16} aria-hidden="true" /> <span>Descartar</span>
+                    </button>
+                    <button className="button button-primary inventory-save" type="button" onClick={() => void saveProduct(draft.id)} disabled={!hasChanges || savingId === draft.id}>
+                      <Save size={16} aria-hidden="true" /> {savingId === draft.id ? "Guardando…" : hasChanges ? "Guardar cambios" : "Sin cambios"}
+                    </button>
+                  </div>
+                  {productFeedback ? <FeedbackMessage feedback={productFeedback} compact /> : null}
                 </div>
-              )}
-
-              <div className="inventory-toggles">
-                <label>
-                  <input
-                    type="checkbox"
-                    role="switch"
-                    checked={draft.purchaseEnabled}
-                    onChange={(event) => updateDraft(draft.id, (current) => ({ ...current, purchaseEnabled: event.target.checked }))}
-                  />
-                  <span><strong>Permitir compras</strong><small>{draft.purchaseEnabled ? "Los clientes pueden pedir este producto." : "Las compras están pausadas temporalmente."}</small></span>
-                </label>
-                <label>
-                  <input
-                    type="checkbox"
-                    role="switch"
-                    checked={draft.visible}
-                    onChange={(event) => updateDraft(draft.id, (current) => ({ ...current, visible: event.target.checked }))}
-                  />
-                  <span><strong>Mostrar en el catálogo</strong><small>{draft.visible ? "El producto aparece en la tienda." : "Está oculto, pero no fue eliminado."}</small></span>
-                </label>
               </div>
-
-              <div className="inventory-card-actions">
-                <button className="button button-outline inventory-reset" type="button" onClick={() => resetProduct(draft.id)} disabled={!hasChanges || savingId === draft.id} aria-label={`Descartar cambios de ${draft.name}`}>
-                  <RotateCcw size={16} aria-hidden="true" /> <span>Descartar</span>
-                </button>
-                <button className="button button-primary inventory-save" type="button" onClick={() => void saveProduct(draft.id)} disabled={!hasChanges || savingId === draft.id}>
-                  <Save size={16} aria-hidden="true" /> {savingId === draft.id ? "Guardando…" : hasChanges ? "Guardar cambios" : "Sin cambios"}
-                </button>
-              </div>
-              {productFeedback ? <FeedbackMessage feedback={productFeedback} compact /> : null}
             </article>
           );
         })}
@@ -422,16 +455,18 @@ function StatusFilterButton({
   icon,
   label,
   onClick,
+  primary = false,
   value,
 }: {
   active: boolean;
   icon: React.ReactNode;
   label: string;
   onClick: () => void;
+  primary?: boolean;
   value: number;
 }) {
   return (
-    <button className={active ? "is-active" : ""} type="button" aria-pressed={active} onClick={onClick}>
+    <button className={`${active ? "is-active" : ""}${primary ? " is-primary" : ""}`} type="button" aria-pressed={active} onClick={onClick}>
       <span className="inventory-overview-icon" aria-hidden="true">{icon}</span>
       <span><strong>{value}</strong><small>{label}</small></span>
     </button>

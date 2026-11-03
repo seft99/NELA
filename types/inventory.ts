@@ -18,6 +18,7 @@ export type InventoryProduct = {
     src: string;
     alt: string;
   };
+  price: number;
   stock: number;
   purchaseEnabled: boolean;
   visible: boolean;

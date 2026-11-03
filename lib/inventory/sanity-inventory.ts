@@ -46,6 +46,7 @@ const inventoryQuery = `*[_type == "product" && category == "accesorios-plata" &
   name,
   reference,
   category,
+  price,
   "jewelryType": catalogAttributes.jewelryType,
   "image": images[0]{"src": asset->url, alt},
   "stock": coalesce(stock, inventoryQuantity, 0),
@@ -62,16 +63,23 @@ const inventoryQuery = `*[_type == "product" && category == "accesorios-plata" &
 export async function listInventoryProducts(): Promise<InventoryProduct[]> {
   const config = requireConfiguration();
   const payload = await sanityRequest(`query/${config.dataset}?query=${encodeURIComponent(inventoryQuery)}`) as { result?: InventoryProduct[] };
-  return (payload.result ?? []).map((product) => ({
-    ...product,
-    image: product.image?.src
-      ? { src: product.image.src, alt: product.image.alt?.trim() || product.name }
-      : undefined,
-    stock: normalizeStock(product.stock),
-    purchaseEnabled: Boolean(product.purchaseEnabled),
-    visible: Boolean(product.visible),
-    variantInventory: (product.variantInventory ?? []).map((line) => ({ ...line, stock: normalizeStock(line.stock) })),
-  }));
+  return (payload.result ?? []).map((product) => {
+    const price = Number(product.price);
+    if (!Number.isInteger(price) || price <= 0) {
+      throw new Error(`El precio de ${product.name || product.id} no es válido.`);
+    }
+    return {
+      ...product,
+      image: product.image?.src
+        ? { src: product.image.src, alt: product.image.alt?.trim() || product.name }
+        : undefined,
+      price,
+      stock: normalizeStock(product.stock),
+      purchaseEnabled: Boolean(product.purchaseEnabled),
+      visible: Boolean(product.visible),
+      variantInventory: (product.variantInventory ?? []).map((line) => ({ ...line, stock: normalizeStock(line.stock) })),
+    };
+  });
 }
 
 export async function updateInventoryProduct(update: InventoryUpdate): Promise<InventoryProduct> {
@@ -79,6 +87,7 @@ export async function updateInventoryProduct(update: InventoryUpdate): Promise<I
   if (!current) throw new Error("El producto ya no existe o no está publicado.");
 
   const set: Record<string, unknown> = {};
+  if (update.price !== undefined) set.price = update.price;
   if (update.purchaseEnabled !== undefined) set.purchaseEnabled = update.purchaseEnabled;
   if (update.visible !== undefined) set.visible = update.visible;
 

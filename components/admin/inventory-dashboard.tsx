@@ -50,6 +50,7 @@ async function requestInventory() {
 function productHasChanges(original: InventoryProduct | undefined, draft: InventoryProduct | undefined) {
   if (!original || !draft) return false;
   if (
+    original.price !== draft.price ||
     original.stock !== draft.stock ||
     original.purchaseEnabled !== draft.purchaseEnabled ||
     original.visible !== draft.visible ||
@@ -181,6 +182,7 @@ export function InventoryDashboard({ ownerName, signOutPath }: { ownerName: stri
       ...(draft.variantInventory.length
         ? { variantStocks: draft.variantInventory.map((line) => ({ id: line.id, stock: line.stock })) }
         : { stock: draft.stock }),
+      price: draft.price,
       purchaseEnabled: draft.purchaseEnabled,
       visible: draft.visible,
     };
@@ -213,7 +215,7 @@ export function InventoryDashboard({ ownerName, signOutPath }: { ownerName: stri
         <div className="inventory-heading-copy">
           <p className="eyebrow">Panel privado</p>
           <h1 id="inventory-title">Inventario NELA</h1>
-          <p>Actualiza existencias y decide qué productos se pueden comprar o ver en la tienda.</p>
+          <p>Actualiza precios y existencias, y decide qué productos se pueden comprar o ver en la tienda.</p>
           <p className="inventory-session">Sesión activa: <strong>{ownerName}</strong></p>
         </div>
         <div className="inventory-header-actions">
@@ -227,7 +229,7 @@ export function InventoryDashboard({ ownerName, signOutPath }: { ownerName: stri
       <details className="inventory-help">
         <summary>¿Cómo usar este panel?</summary>
         <ol>
-          <li>Busca el producto y ajusta sus existencias.</li>
+          <li>Busca el producto y ajusta su precio o sus existencias.</li>
           <li>Activa o pausa la compra y elige si aparece en el catálogo.</li>
           <li>Presiona <strong>Guardar cambios</strong> dentro de ese producto.</li>
         </ol>
@@ -337,6 +339,15 @@ export function InventoryDashboard({ ownerName, signOutPath }: { ownerName: stri
                     {hasChanges ? <span className="inventory-unsaved">Cambios sin guardar</span> : null}
                   </div>
                 </div>
+              </div>
+
+              <div className="inventory-price-block">
+                <span><strong>Precio</strong><small>Valor publicado en la tienda</small></span>
+                <PriceControl
+                  value={draft.price}
+                  label={`Precio de ${draft.name}`}
+                  onChange={(price) => updateDraft(draft.id, (current) => ({ ...current, price }))}
+                />
               </div>
 
               {hasVariants ? (
@@ -456,5 +467,29 @@ function StockControl({ value, label, onChange }: { value: number; label: string
         <Plus size={17} aria-hidden="true" />
       </button>
     </div>
+  );
+}
+
+const inventoryPriceFormatter = new Intl.NumberFormat("es-CO", { maximumFractionDigits: 0 });
+
+function PriceControl({ value, label, onChange }: { value: number; label: string; onChange: (value: number) => void }) {
+  return (
+    <label className="inventory-price-control">
+      <span aria-hidden="true">$</span>
+      <input
+        type="text"
+        inputMode="numeric"
+        autoComplete="off"
+        value={inventoryPriceFormatter.format(value)}
+        aria-label={label}
+        onFocus={(event) => event.currentTarget.select()}
+        onChange={(event) => {
+          const digits = event.target.value.replace(/\D/g, "").slice(0, 9);
+          const nextValue = Number(digits);
+          if (Number.isInteger(nextValue) && nextValue > 0) onChange(nextValue);
+        }}
+      />
+      <small>COP</small>
+    </label>
   );
 }

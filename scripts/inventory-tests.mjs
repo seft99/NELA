@@ -174,9 +174,11 @@ try {
   ), true);
 
   assert.equal(validation.inventoryUpdateSchema.safeParse({ productId: "p1", stock: 0 }).success, true);
+  assert.equal(validation.inventoryUpdateSchema.safeParse({ productId: "p1", price: 50000 }).success, true);
+  assert.equal(validation.inventoryUpdateSchema.safeParse({ productId: "p1", price: 0 }).success, false);
+  assert.equal(validation.inventoryUpdateSchema.safeParse({ productId: "p1", price: 50000.5 }).success, false);
   assert.equal(validation.inventoryUpdateSchema.safeParse({ productId: "p1", stock: -1 }).success, false);
   assert.equal(validation.inventoryUpdateSchema.safeParse({ productId: "p1", variantStocks: [] }).success, false);
-  assert.equal(validation.inventoryUpdateSchema.safeParse({ productId: "p1", price: 1 }).success, false);
   assert.equal(validation.inventoryUpdateSchema.safeParse({ productId: "p1" }).success, false);
   assert.equal(validation.isSameOriginMutation(new Request("https://nela.example/api", {
     method: "PATCH",

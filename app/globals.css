@@ -1779,10 +1779,15 @@ body.mobile-menu-open { overflow: hidden; }
 .inventory-status.paused { color: #765b20; background: #f1e7ca; }
 .inventory-status.hidden { color: var(--color-text-secondary); background: #e8e3de; }
 .inventory-unsaved { padding: .35rem .55rem; color: var(--color-brand-wood); background: transparent; border: 1px solid currentColor; font-size: .58rem; font-weight: 650; letter-spacing: .06em; text-transform: uppercase; }
-.inventory-stock-block, .inventory-stock-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-block: .8rem; border-top: 1px solid var(--color-border); }
-.inventory-stock-block > span { display: grid; gap: .15rem; }
-.inventory-stock-block > span strong, .inventory-stock-row > span, .inventory-variants legend { font-size: .68rem; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; }
-.inventory-stock-block > span small { color: var(--color-text-secondary); font-size: .68rem; }
+.inventory-price-block, .inventory-stock-block, .inventory-stock-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-block: .8rem; border-top: 1px solid var(--color-border); }
+.inventory-price-block > span, .inventory-stock-block > span { display: grid; gap: .15rem; }
+.inventory-price-block > span strong, .inventory-stock-block > span strong, .inventory-stock-row > span, .inventory-variants legend { font-size: .68rem; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; }
+.inventory-price-block > span small, .inventory-stock-block > span small { color: var(--color-text-secondary); font-size: .68rem; }
+.inventory-price-control { min-width: 212px; height: 44px; display: grid; grid-template-columns: 42px minmax(100px, 1fr) 44px; align-items: center; color: var(--color-text-primary); background: var(--color-brand-ivory); border: 1px solid var(--color-border); }
+.inventory-price-control > span { display: grid; place-items: center; color: var(--color-brand-wood); font-size: 1rem; font-weight: 650; }
+.inventory-price-control input { min-width: 0; width: 100%; height: 42px; padding: .4rem .25rem; color: var(--color-text-primary); background: transparent; border: 0; font-size: 1rem; font-weight: 650; text-align: right; }
+.inventory-price-control input:focus-visible { outline: 2px solid var(--color-brand-wood); outline-offset: -2px; }
+.inventory-price-control small { color: var(--color-text-secondary); font-size: .61rem; font-weight: 650; letter-spacing: .06em; text-align: center; }
 .inventory-variants { margin: 0; padding: 0; border: 0; }
 .inventory-variants legend { margin-bottom: .5rem; }
 .inventory-total { margin: .65rem 0 1rem; color: var(--color-text-secondary); font-size: .72rem; text-align: right; }
@@ -2298,8 +2303,10 @@ body.mobile-menu-open { overflow: hidden; }
   .inventory-product-identity h2 { max-width: 100%; font-size: clamp(1.35rem, 7vw, 1.65rem); line-height: 1.05; overflow-wrap: anywhere; word-break: break-word; }
   .inventory-product-badges { gap: .35rem; margin-top: .5rem; }
   .inventory-status, .inventory-unsaved { font-size: .52rem; }
-  .inventory-stock-block, .inventory-stock-row { align-items: flex-start; flex-direction: column; }
-  .inventory-stock-block, .inventory-stock-row { gap: .65rem; padding-block: .9rem; }
+  .inventory-price-block, .inventory-stock-block, .inventory-stock-row { align-items: flex-start; flex-direction: column; }
+  .inventory-price-block, .inventory-stock-block, .inventory-stock-row { gap: .65rem; padding-block: .9rem; }
+  .inventory-price-control { width: 100%; min-width: 0; height: 48px; grid-template-columns: 48px minmax(0, 1fr) 48px; }
+  .inventory-price-control input { height: 46px; font-size: 1rem; }
   .inventory-stock-control { width: 100%; grid-template-columns: 48px 1fr 48px; }
   .inventory-stock-control button, .inventory-stock-control input { height: 48px; }
   .inventory-stock-control input { width: 100%; }

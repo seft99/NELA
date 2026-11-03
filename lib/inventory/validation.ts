@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const inventoryUpdateSchema = z.object({
   productId: z.string().trim().min(1).max(256),
+  price: z.number().int().min(1).max(1_000_000_000).optional(),
   stock: z.number().int().min(0).max(1_000_000).optional(),
   purchaseEnabled: z.boolean().optional(),
   visible: z.boolean().optional(),
@@ -12,6 +13,7 @@ export const inventoryUpdateSchema = z.object({
 }).strict().superRefine((value, context) => {
   if (
     value.stock === undefined &&
+    value.price === undefined &&
     value.purchaseEnabled === undefined &&
     value.visible === undefined &&
     value.variantStocks === undefined

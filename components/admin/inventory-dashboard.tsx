@@ -2,7 +2,9 @@
 
 import {
   AlertCircle,
+  Check,
   CheckCircle2,
+  ChevronDown,
   EyeOff,
   Minus,
   PackageCheck,
@@ -16,7 +18,7 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { InventoryProduct } from "@/types/inventory";
 import type { JewelryType } from "@/types/product";
 
@@ -75,6 +77,7 @@ export function InventoryDashboard({ ownerName, signOutPath }: { ownerName: stri
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const typeMenuRef = useRef<HTMLDetailsElement>(null);
 
   const replaceInventory = (nextProducts: InventoryProduct[]) => {
     setProducts(nextProducts);
@@ -246,13 +249,60 @@ export function InventoryDashboard({ ownerName, signOutPath }: { ownerName: stri
             <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Nombre o referencia" />
           </span>
         </label>
-        <label className="inventory-type-filter">
+        <label className="inventory-type-filter inventory-type-filter-native">
           <span>Tipo de joya</span>
           <select value={jewelryType} onChange={(event) => setJewelryType(event.target.value as "all" | JewelryType)}>
             <option value="all">Todos los tipos</option>
             {availableTypes.map((value) => <option key={value} value={value}>{JEWELRY_TYPE_NAMES[value]}</option>)}
           </select>
         </label>
+        <div className="inventory-type-filter inventory-type-filter-custom">
+          <span>Tipo de joya</span>
+          <details
+            ref={typeMenuRef}
+            className="inventory-type-menu"
+            onKeyDown={(event) => {
+              if (event.key === "Escape" && typeMenuRef.current?.open) {
+                typeMenuRef.current.removeAttribute("open");
+                typeMenuRef.current.querySelector("summary")?.focus();
+              }
+            }}
+          >
+            <summary aria-label={`Tipo de joya: ${jewelryType === "all" ? "Todos los tipos" : JEWELRY_TYPE_NAMES[jewelryType]}`}>
+              <span>{jewelryType === "all" ? "Todos los tipos" : JEWELRY_TYPE_NAMES[jewelryType]}</span>
+              <ChevronDown size={17} aria-hidden="true" />
+            </summary>
+            <div className="inventory-type-options" aria-label="Tipos de joya">
+              <button
+                type="button"
+                className={jewelryType === "all" ? "is-selected" : undefined}
+                aria-pressed={jewelryType === "all"}
+                onClick={() => {
+                  setJewelryType("all");
+                  typeMenuRef.current?.removeAttribute("open");
+                }}
+              >
+                <span>Todos los tipos</span>
+                <Check size={16} aria-hidden="true" />
+              </button>
+              {availableTypes.map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  className={jewelryType === value ? "is-selected" : undefined}
+                  aria-pressed={jewelryType === value}
+                  onClick={() => {
+                    setJewelryType(value);
+                    typeMenuRef.current?.removeAttribute("open");
+                  }}
+                >
+                  <span>{JEWELRY_TYPE_NAMES[value]}</span>
+                  <Check size={16} aria-hidden="true" />
+                </button>
+              ))}
+            </div>
+          </details>
+        </div>
         <p className="inventory-results" aria-live="polite">
           {visibleProducts.length} {visibleProducts.length === 1 ? "producto" : "productos"}
         </p>
